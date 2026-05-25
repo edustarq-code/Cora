@@ -1,9 +1,2863 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=/cora/index.html">
-  <script>window.location.replace('/cora/index.html')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cora</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1a1814">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ============================================================
+   CORA — Base CSS
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #f7f5f0;
+  --surface:     #ffffff;
+  --surface2:    #f0ede6;
+  --border:      #e2ddd5;
+  --border2:     #ccc8c0;
+  --ink:         #1a1814;
+  --ink2:        #4a4640;
+  --muted:       #8a8278;
+  --coral:       #e8420a;
+  --coral-soft:  #fff0ec;
+  --coral-mid:   #ffd4c8;
+  --amber:       #c97000;
+  --amber-soft:  #fff8ec;
+  --green:       #1a7a4a;
+  --green-soft:  #edfaf3;
+  --blue:        #1a4fd4;
+  --blue-soft:   #eef2ff;
+  --purple:      #6e3fd4;
+}
+
+body {
+  font-family: 'Geist', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── LOGIN ── */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.login-wrap {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+.login-logo { display: flex; align-items: center; gap: .7rem; margin-bottom: .5rem; }
+.login-sub { font-size: .95rem; color: var(--muted); }
+.btn-oauth {
+  width: 100%;
+  padding: .75rem 1.2rem;
+  border-radius: 10px;
+  border: 1.5px solid var(--border2);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: 'Geist', sans-serif;
+  font-size: .9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .6rem;
+  transition: all .15s;
+}
+.btn-oauth:hover { background: var(--surface2); border-color: var(--ink); }
+.login-terms { font-size: .75rem; color: var(--muted); text-align: center; }
+
+/* ── APP SHELL ── */
+#app { display: block; min-height: 100vh; }
+
+/* ── SIDEBAR ── */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  z-index: 60;
+}
+.sidebar-logo {
+  padding: 1.1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  width: 32px; height: 32px;
+  background: var(--ink);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.1rem; color: #fff; font-style: italic;
+}
+.logo-name { font-family: 'Instrument Serif', serif; font-size: 1.3rem; font-style: italic; }
+.logo-badge {
+  margin-left: auto;
+  font-size: .65rem; font-weight: 600;
+  background: var(--coral-soft); color: var(--coral);
+  padding: .15rem .5rem; border-radius: 50px;
+  border: 1px solid var(--coral-mid);
+}
+.sidebar-section {
+  font-size: .68rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted);
+  padding: .8rem 1.2rem .3rem;
+}
+.nav-item {
+  display: flex; align-items: center; gap: .65rem;
+  padding: .55rem 1rem;
+  margin: 0 .4rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: .85rem; font-weight: 500; color: var(--ink2);
+  border: none; background: none;
+  width: calc(100% - .8rem); text-align: left;
+  transition: all .12s;
+}
+.nav-item:hover { background: var(--surface2); color: var(--ink); }
+.nav-item.active { background: var(--ink); color: #fff; }
+.nav-icon { font-size: .9rem; width: 20px; text-align: center; }
+.sidebar-bottom { margin-top: auto; padding: 1rem; border-top: 1px solid var(--border); }
+.user-card {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .6rem; border-radius: 10px;
+  cursor: pointer; transition: background .12s;
+}
+.user-card:hover { background: var(--surface2); }
+.avatar {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--coral), var(--amber));
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .85rem; color: #fff;
+}
+.user-info { flex: 1; min-width: 0; }
+.user-name { font-size: .85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-plan { font-size: .72rem; color: var(--muted); }
+
+/* ── MAIN ── */
+.main { margin-left: 240px; min-height: 100vh; }
+.page-content { padding: 2rem 2.5rem; max-width: 860px; }
+.page { display: none; }
+.page.active { display: block; animation: fadeIn .2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ── PAGE HEADER ── */
+.ph { margin-bottom: 1.8rem; }
+.ph-eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
+.ph-title { font-family: 'Instrument Serif', serif; font-size: 2rem; font-style: italic; line-height: 1.1; }
+.ph-sub { font-size: .85rem; color: var(--muted); margin-top: .3rem; }
+
+/* ── CARD ── */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; }
+.card-title { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 1rem; }
+.divider { height: 1px; background: var(--border); margin: .8rem 0; }
+.empty-state { font-size: .88rem; color: var(--muted); text-align: center; padding: 1.5rem 0; line-height: 1.6; }
+
+/* ── FORM ── */
+.form-row { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; }
+.inp {
+  flex: 1; min-width: 120px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .6rem .85rem;
+  color: var(--ink);
+  font-family: 'Geist', sans-serif;
+  font-size: .86rem;
+  outline: none;
+  transition: border-color .15s;
+}
+.inp:focus { border-color: var(--coral); }
+.inp::placeholder { color: var(--muted); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .55rem 1.1rem;
+  border-radius: 8px;
+  font-family: 'Geist', sans-serif;
+  font-size: .84rem; font-weight: 600;
+  cursor: pointer; border: none;
+  transition: all .15s; white-space: nowrap;
+}
+.btn:hover { filter: brightness(.93); }
+.btn-coral { background: var(--coral); color: #fff; }
+.btn-ghost { background: var(--surface); border: 1px solid var(--border); color: var(--ink); }
+.btn-sm { padding: .38rem .8rem; font-size: .78rem; }
+.btn-delete {
+  background: none; border: none;
+  color: var(--muted); cursor: pointer;
+  font-size: .85rem; padding: .3rem .5rem;
+  border-radius: 6px; transition: all .12s;
+}
+.btn-delete:hover { background: #fee; color: #c00; }
+
+/* ── ADD ROW ── */
+.add-row { display: flex; gap: .5rem; margin-top: .6rem; }
+
+/* ── ROTINA HOJE ── */
+.rotina-block {
+  display: flex; align-items: center; gap: .8rem;
+  padding: .75rem .9rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all .15s;
+  margin-bottom: .5rem;
+}
+.rotina-block:hover { border-color: var(--border2); background: var(--surface2); }
+.rotina-block.selected { border-color: var(--coral); background: var(--coral-soft); }
+.block-time { font-size: .75rem; font-weight: 600; color: var(--muted); font-family: monospace; width: 38px; flex-shrink: 0; }
+.block-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.block-name { flex: 1; font-size: .92rem; font-weight: 600; }
+.block-dur { font-size: .75rem; color: var(--muted); }
+.block-check {
+  width: 22px; height: 22px; border-radius: 6px;
+  border: 1.5px solid var(--border2);
+  flex-shrink: 0;
+}
+.rotina-block.selected .block-check { background: var(--coral); border-color: var(--coral); }
+
+/* ── QUESTION CARD ── */
+.question-card {
+  background: var(--ink); color: #fff;
+  border-radius: 12px; padding: 1.4rem;
+  margin-bottom: 1rem;
+  animation: fadeIn .25s ease;
+}
+.q-eyebrow { font-size: .72rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.45); margin-bottom: .5rem; }
+.q-title { font-family: 'Instrument Serif', serif; font-size: 1.2rem; font-style: italic; margin-bottom: 1rem; line-height: 1.3; }
+.q-input {
+  width: 100%; background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 9px; padding: .7rem .9rem;
+  color: #fff; font-family: 'Geist', sans-serif; font-size: .9rem;
+  outline: none; transition: border-color .15s;
+}
+.q-input:focus { border-color: rgba(255,255,255,.4); }
+.q-input::placeholder { color: rgba(255,255,255,.3); }
+.q-actions { display: flex; gap: .5rem; margin-top: .8rem; }
+.q-btn { flex: 1; padding: .6rem; border-radius: 8px; border: none; cursor: pointer; font-family: 'Geist', sans-serif; font-size: .84rem; font-weight: 600; transition: all .15s; }
+.q-btn-primary { background: var(--coral); color: #fff; }
+.q-btn-primary:hover { background: #c83508; }
+.q-btn-ghost { background: rgba(255,255,255,.08); color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.12); }
+
+/* ── TAREFAS ── */
+.tarefa-item {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .65rem .8rem;
+  border-radius: 8px; cursor: pointer;
+  transition: background .12s;
+  margin-bottom: .3rem;
+}
+.tarefa-item:hover { background: var(--surface2); }
+.tarefa-cb {
+  width: 19px; height: 19px; border-radius: 5px;
+  border: 1.5px solid var(--border2); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .65rem; font-weight: 700; transition: all .15s;
+}
+.tarefa-cb.done { background: var(--green); border-color: var(--green); color: #fff; }
+.tarefa-info { flex: 1; }
+.tarefa-label { font-size: .86rem; }
+.tarefa-label.done { text-decoration: line-through; color: var(--muted); }
+.tarefa-sub { font-size: .74rem; color: var(--muted); margin-top: .1rem; }
+.chip { font-size: .7rem; font-weight: 600; padding: .15rem .55rem; border-radius: 50px; }
+.chip-green { background: var(--green-soft); color: var(--green); border: 1px solid #b8eed4; }
+
+/* ── MATÉRIAS ── */
+.materia-item {
+  display: flex; align-items: center; gap: .8rem;
+  padding: .8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: .5rem;
+}
+.materia-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+.materia-icon { font-size: 1.1rem; }
+.materia-nome { flex: 1; font-size: .9rem; font-weight: 600; }
+
+/* ── SCHEDULE LISTA ── */
+.sched-item {
+  display: flex; align-items: center; gap: .8rem;
+  padding: .8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  margin-bottom: .5rem;
+}
+.sched-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.sched-info { flex: 1; }
+.sched-info strong { font-size: .88rem; display: block; }
+.sched-meta { font-size: .75rem; color: var(--muted); }
+
+/* ── NOTIFICAÇÃO ── */
+.notif {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  background: var(--ink); color: #fff;
+  border-radius: 10px; padding: .75rem 1.1rem;
+  font-size: .84rem; z-index: 999;
+  transform: translateY(80px); opacity: 0;
+  transition: all .25s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+.notif.show { transform: none; opacity: 1; }
+
+/* ── GRADE SEMANAL ── */
+.sched-grid-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  max-height: 72vh;
+  overflow-y: auto;
+}
+.sched-grid-inner { display: flex; min-width: 640px; }
+.sched-time-col {
+  width: 46px; flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  position: sticky; left: 0; z-index: 20;
+  background: var(--surface);
+}
+.sched-day-col {
+  flex: 1;
+  border-right: 1px solid var(--border);
+  min-width: 80px;
+}
+.sched-day-col:last-child { border-right: none; }
+.sched-day-header {
+  height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .63rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink2);
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--surface); z-index: 10;
+}
+.sched-day-body { position: relative; cursor: crosshair; }
+.sched-day-body:hover { background: rgba(0,0,0,.012); }
+.sched-time-label {
+  position: absolute; right: 3px;
+  font-size: .56rem; color: var(--muted);
+  font-family: monospace;
+  transform: translateY(-50%);
+  white-space: nowrap; pointer-events: none;
+}
+.sched-grid-line {
+  position: absolute; left: 0; right: 0;
+  border-top: 1px solid var(--border);
+  pointer-events: none;
+}
+.sched-grid-line.half { border-top-style: dashed; opacity: .35; }
+.sched-block {
+  position: absolute; left: 2px; right: 2px;
+  border-radius: 4px;
+  padding: 3px 5px 9px;
+  overflow: hidden; cursor: pointer;
+  transition: filter .15s;
+  display: flex; align-items: flex-start;
+}
+.sched-block:hover { filter: brightness(.88); }
+.block-resize {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 7px; cursor: ns-resize;
+  background: rgba(0,0,0,.2); border-radius: 0 0 4px 4px;
+  opacity: 0; transition: opacity .15s;
+}
+.sched-block:hover .block-resize,
+.sched-block.sel-block .block-resize { opacity: 1; }
+.sched-block.sel-block {
+  outline: 2.5px solid #fff;
+  box-shadow: 0 0 0 3.5px rgba(0,0,0,.55);
+}
+.sched-block span {
+  font-size: .58rem; font-weight: 700; color: #fff;
+  text-transform: uppercase; letter-spacing: .03em;
+  line-height: 1.2; word-break: break-word;
+  text-shadow: 0 1px 2px rgba(0,0,0,.35);
+  flex: 1;
+}
+.block-del {
+  display: none;
+  flex-shrink: 0;
+  width: 15px; height: 15px;
+  background: rgba(0,0,0,.45);
+  border-radius: 50%;
+  font-size: .6rem; font-weight: 700; color: #fff;
+  align-items: center; justify-content: center;
+  cursor: pointer; line-height: 1;
+  margin-left: 2px;
+}
+.sched-block.sel-block .block-del { display: flex; }
+
+/* ── INLINE FORM (clique direto na grade) ── */
+.inline-form {
+  position: absolute; left: 2px; right: 2px;
+  z-index: 50;
+  background: var(--surface);
+  border: 2px solid var(--coral);
+  border-radius: 6px;
+  padding: 5px 6px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.18);
+}
+.inline-time-label {
+  font-size: .56rem; font-family: monospace;
+  color: var(--muted); margin-bottom: 3px;
+}
+.inline-inp {
+  width: 100%; border: none; outline: none;
+  font-size: .75rem; font-family: 'Geist', sans-serif;
+  font-weight: 700; text-transform: uppercase;
+  color: var(--ink); background: transparent;
+  padding: 1px 0;
+}
+.inline-inp::placeholder { color: var(--muted); font-weight: 400; text-transform: none; }
+.inline-footer { display: flex; align-items: center; gap: 5px; margin-top: 4px; }
+.inline-dot {
+  width: 13px; height: 13px; border-radius: 50%;
+  cursor: pointer; border: 2px solid transparent;
+  flex-shrink: 0; transition: transform .1s;
+}
+.inline-dot:hover { transform: scale(1.2); }
+.inline-dot.sel { border-color: var(--ink); }
+.inline-end {
+  margin-left: auto;
+  font-size: .62rem; font-family: monospace;
+  border: 1px solid var(--border); border-radius: 4px;
+  padding: 1px 3px; color: var(--ink2);
+  background: var(--surface2); outline: none;
+  width: 62px;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.45); z-index: 200;
+}
+.modal-overlay.open { display: flex; align-items: center; justify-content: center; }
+.modal-box {
+  background: var(--surface);
+  border-radius: 16px; padding: 1.5rem;
+  width: 360px; max-width: 92vw;
+  animation: fadeIn .2s ease;
+}
+.modal-title { font-family: 'Instrument Serif', serif; font-size: 1.3rem; font-style: italic; margin-bottom: 1.2rem; }
+.field-label { font-size: .72rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: .35rem; }
+.field-group { margin-bottom: .9rem; }
+.color-dot-pick {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid transparent; cursor: pointer;
+  transition: transform .12s, border-color .12s;
+}
+.color-dot-pick:hover { transform: scale(1.15); }
+.color-dot-pick.sel { border-color: var(--ink); transform: scale(1.15); }
+.tipo-btn {
+  flex: 1; padding: .5rem .7rem; border-radius: 8px;
+  border: 1.5px solid var(--border); background: var(--surface);
+  color: var(--ink2); font-family: 'Geist', sans-serif;
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: all .12s;
+}
+.tipo-btn.sel { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* blocos não-estudo na tela Hoje */
+.rotina-block.info-block { opacity: .55; cursor: default; }
+.rotina-block.info-block:hover { border-color: var(--border); background: var(--surface); }
+
+/* ── RESPONSIVO ── */
+@media (max-width: 768px) {
+  #app { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+}
+
+</style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <style>
+    /* ── MODAL ─────────────────────────────── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:200;backdrop-filter:blur(2px)}
+    .modal-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+      background:var(--surface);border:1px solid var(--border);border-radius:16px;
+      padding:1.4rem;z-index:201;min-width:300px;max-width:480px;width:90%;
+      box-shadow:0 20px 60px rgba(26,24,20,.18)}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+    .modal-header span{font-size:.95rem;font-weight:700;color:var(--ink)}
+    .modal-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;
+      padding:4px 8px;border-radius:6px;transition:background .15s;font-family:'Geist',sans-serif}
+    .modal-close:hover{background:var(--surface2)}
+    .import-options{display:flex;flex-direction:column;gap:.6rem}
+    .import-option{border:1.5px solid var(--border);border-radius:10px;
+      padding:.85rem 1rem;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:.9rem;
+      background:var(--surface)}
+    .import-option:hover:not(.disabled){border-color:var(--coral);background:var(--coral-soft)}
+    .import-option.disabled{opacity:.5;cursor:not-allowed;background:var(--surface2)}
+    .import-icon{font-size:1.3rem;flex-shrink:0}
+    .import-label{font-weight:700;font-size:.88rem;color:var(--ink)}
+    .import-desc{font-size:.76rem;color:var(--muted);margin-top:.15rem}
+    .csv-hint{margin-top:.9rem;padding:.7rem .9rem;background:var(--surface2);
+      border:1px solid var(--border);border-radius:8px;font-size:.76rem;color:var(--muted);line-height:1.9}
+    .csv-hint code{background:var(--border);padding:1px 5px;border-radius:4px;
+      color:var(--ink2);font-size:.74rem}
+    .import-preview-item{font-size:.8rem;padding:.3rem 0;color:var(--ink2);
+      border-bottom:1px solid var(--border)}
+    .import-preview-item strong{color:var(--ink)}
+
+    /* ── CALCULADORA ───────────────────────── */
+    .calc-subject{border:1px solid var(--border);border-radius:12px;margin-bottom:.6rem;
+      overflow:hidden;background:var(--surface)}
+    .calc-header{display:flex;align-items:center;gap:.7rem;padding:.75rem 1rem;
+      cursor:pointer;transition:background .15s;user-select:none}
+    .calc-header:hover{background:var(--surface2)}
+    .calc-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+    .calc-name{font-weight:700;flex:1;font-size:.9rem;color:var(--ink)}
+    .calc-media-badge{font-size:.8rem;font-weight:700;padding:2px 10px;border-radius:20px;
+      background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+    .calc-media-badge.verde{background:var(--green-soft);color:var(--green);border-color:#b8eed4}
+    .calc-media-badge.amarelo{background:var(--amber-soft);color:var(--amber);border-color:#ffe0a0}
+    .calc-media-badge.vermelho{background:#fff0f0;color:#c00;border-color:#fcc}
+    .calc-body{padding:.85rem 1rem 1.1rem;border-top:1px solid var(--border)}
+    .calc-col-labels{font-size:.7rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+      color:var(--muted);display:flex;gap:.4rem;margin-bottom:.4rem;padding:0 .1rem}
+    .calc-row{display:flex;gap:.4rem;margin-bottom:.4rem;align-items:center}
+    .calc-inp-name{flex:1;background:var(--surface2);border:1px solid var(--border);
+      border-radius:7px;padding:.35rem .6rem;color:var(--ink);font-size:.84rem;
+      font-family:'Geist',sans-serif;outline:none;transition:border-color .15s}
+    .calc-inp-sm{width:64px;background:var(--surface2);border:1px solid var(--border);
+      border-radius:7px;padding:.35rem .4rem;color:var(--ink);font-size:.84rem;
+      text-align:center;font-family:'Geist',sans-serif;outline:none;transition:border-color .15s}
+    .calc-inp-name:focus,.calc-inp-sm:focus{border-color:var(--coral);background:var(--surface)}
+    .calc-result{margin-top:.8rem;padding:.7rem .85rem;background:var(--surface2);
+      border:1px solid var(--border);border-radius:9px;font-size:.83rem;line-height:2.1;
+      color:var(--ink2)}
+    .calc-target-row{display:flex;align-items:center;gap:.5rem;margin-top:.8rem;
+      font-size:.82rem;color:var(--muted)}
+    .res-verde{color:var(--green);font-weight:700}
+    .res-amarelo{color:var(--amber);font-weight:700}
+    .res-vermelho{color:#c00;font-weight:700}
+
+    /* ── CALCULADORA — ABAS DE PERÍODO ────────────── */
+    .calc-period-tabs{display:flex;gap:.25rem;flex-wrap:wrap;align-items:center;margin-bottom:.55rem}
+    .calc-period-tab{display:flex;align-items:center;gap:.2rem;padding:.26rem .6rem;border-radius:6px;
+      border:1.5px solid var(--border);background:none;cursor:pointer;font-size:.79rem;font-weight:600;
+      color:var(--muted);font-family:'Geist',sans-serif;transition:all .15s;line-height:1.3}
+    .calc-period-tab:hover{border-color:var(--coral);color:var(--ink)}
+    .calc-period-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .calc-period-tab.verde{border-color:#b8eed4;color:var(--green)}
+    .calc-period-tab.amarelo{border-color:#ffe0a0;color:var(--amber)}
+    .calc-period-tab.vermelho{border-color:#fcc;color:#c00}
+    .calc-period-tab.active.verde,.calc-period-tab.active.amarelo,.calc-period-tab.active.vermelho{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .calc-tab-avg{font-size:.68rem;opacity:.75}
+    .calc-period-body{padding:.1rem 0 .5rem}
+    .calc-tab-name-inp{background:transparent;border:none;color:#fff;font-family:'Geist',sans-serif;
+      font-size:.79rem;font-weight:600;outline:none;min-width:18px;max-width:58px;
+      text-align:center;cursor:text;padding:0}
+
+    /* ── TIMER FLUTUANTE ─────────────────── */
+    #timer-float{position:fixed;bottom:1.5rem;right:1.5rem;z-index:150;display:flex;flex-direction:column;align-items:flex-end}
+    #timer-bubble{background:var(--ink);color:#fff;border-radius:50px;padding:.45rem 1rem;
+      cursor:pointer;font-weight:700;font-size:.88rem;box-shadow:0 4px 18px rgba(0,0,0,.2);
+      transition:all .2s;user-select:none;display:flex;align-items:center;gap:.4rem;
+      font-family:'Geist',sans-serif}
+    #timer-bubble:hover{filter:brightness(1.2)}
+    #timer-bubble.running{background:var(--coral);animation:tPulse 2s ease-in-out infinite}
+    @keyframes tPulse{0%,100%{box-shadow:0 4px 18px rgba(232,66,10,.3)}50%{box-shadow:0 4px 28px rgba(232,66,10,.6)}}
+    #timer-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+      padding:1.1rem 1.2rem;margin-bottom:.5rem;box-shadow:0 8px 30px rgba(0,0,0,.12);min-width:220px}
+    .timer-mode-btn{flex:1;padding:.32rem .55rem;border-radius:6px;border:1.5px solid var(--border);
+      background:none;cursor:pointer;font-size:.76rem;font-weight:600;color:var(--muted);
+      font-family:'Geist',sans-serif;transition:all .15s}
+    .timer-mode-btn.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .timer-inp{width:42px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;
+      padding:.18rem .3rem;text-align:center;font-size:.78rem;color:var(--ink);font-family:'Geist',sans-serif;outline:none}
+
+    /* ── ROTINAS DIÁRIAS ─────────────────── */
+    .rotina-rec{display:flex;align-items:center;gap:.7rem;padding:.5rem .7rem;border-radius:8px;
+      cursor:pointer;transition:background .12s;margin-bottom:.25rem}
+    .rotina-rec:hover{background:var(--surface2)}
+    .rotina-rec-cb{width:18px;height:18px;border-radius:5px;border:1.5px solid var(--border2);
+      flex-shrink:0;display:flex;align-items:center;justify-content:center;
+      font-size:.6rem;font-weight:700;transition:all .15s;color:#fff}
+    .rotina-rec-cb.done{background:var(--coral);border-color:var(--coral)}
+    .rotina-rec-label{flex:1;font-size:.85rem}
+    .rotina-rec-label.done{text-decoration:line-through;color:var(--muted)}
+
+    /* ── PERFIL (emoji grid) ─────────────── */
+    .emoji-opt{width:34px;height:34px;border-radius:8px;border:1.5px solid transparent;
+      cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;
+      transition:all .12s}
+    .emoji-opt:hover{background:var(--surface2);border-color:var(--border)}
+    .emoji-opt.sel{border-color:var(--coral);background:var(--coral-soft)}
+
+    /* ── TEMAS ──────────────────────────────── */
+    .tema-opt{width:24px;height:24px;border-radius:50%;cursor:pointer;
+      border:2.5px solid transparent;transition:all .15s;flex-shrink:0}
+    .tema-opt:hover{transform:scale(1.18)}
+    .tema-opt.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
+
+
+    /* ── PAINEL DE FÓRMULAS ────────────────── */
+    #formula-panel{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:95vw;
+      background:var(--surface);border-left:1px solid var(--border);z-index:300;
+      transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
+      display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.14)}
+    #formula-panel.open{transform:translateX(0)}
+    #formula-panel-overlay{position:fixed;inset:0;z-index:299;display:none;background:rgba(26,24,20,.25)}
+    #formula-panel-overlay.open{display:block}
+    .fp-header{padding:1rem 1.1rem .7rem;border-bottom:1px solid var(--border);flex-shrink:0}
+    .fp-title{font-weight:700;font-size:.95rem;color:var(--ink);margin-bottom:.6rem;
+      display:flex;justify-content:space-between;align-items:center}
+    .fp-search{width:100%;background:var(--surface2);border:1px solid var(--border);
+      border-radius:8px;padding:.4rem .7rem;color:var(--ink);font-size:.83rem;
+      font-family:'Geist',sans-serif;outline:none;transition:border-color .15s;box-sizing:border-box}
+    .fp-search:focus{border-color:var(--coral)}
+    .fp-filters{padding:.6rem 1.1rem;border-bottom:1px solid var(--border);flex-shrink:0;
+      display:flex;flex-direction:column;gap:.5rem}
+    .fp-subject-tabs{display:flex;gap:.4rem}
+    .fp-tab{flex:1;padding:.3rem .5rem;border-radius:6px;border:1.5px solid var(--border);
+      background:none;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--muted);
+      font-family:'Geist',sans-serif;transition:all .15s;text-align:center}
+    .fp-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .fp-topic-select{width:100%;background:var(--surface2);border:1px solid var(--border);
+      border-radius:7px;padding:.35rem .6rem;color:var(--ink);font-size:.82rem;
+      font-family:'Geist',sans-serif;outline:none;cursor:pointer;box-sizing:border-box}
+    .fp-body{flex:1;overflow-y:auto;padding:.6rem .8rem}
+    .fp-formula-item{border:1px solid var(--border);border-radius:9px;padding:.65rem .8rem;
+      margin-bottom:.4rem;cursor:pointer;transition:all .15s;background:var(--surface)}
+    .fp-formula-item:hover{border-color:var(--coral);background:var(--coral-soft)}
+    .fp-formula-name{font-size:.82rem;font-weight:700;color:var(--ink);margin-bottom:.15rem}
+    .fp-formula-text{font-size:.79rem;color:var(--muted);font-family:monospace}
+    .fp-formula-desc{font-size:.74rem;color:var(--muted);margin-top:.2rem;
+      display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  </style>
 </head>
-<body></body>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     TELA DE LOGIN
+══════════════════════════════════════════════════════════ -->
+<div id="login-screen">
+  <div class="login-wrap">
+    <div class="login-logo">
+      <div class="logo-mark">C</div>
+      <div class="logo-name">Cora</div>
+    </div>
+    <p class="login-sub">Seus estudos, organizados.</p>
+    <button class="btn-oauth" onclick="loginGoogle()">
+      <img src="https://www.google.com/favicon.ico" width="16"> Entrar com Google
+    </button>
+    <p class="login-terms">Ao entrar, você concorda com os termos de uso.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     APP PRINCIPAL
+══════════════════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">C</div>
+      <div class="logo-name">Cora</div>
+      <div class="logo-badge">Beta</div>
+    </div>
+
+    <div class="sidebar-section">Estudos</div>
+    <button class="nav-item active" onclick="goTo('hoje', this)">
+      <span class="nav-icon">⊞</span> Hoje
+    </button>
+    <button class="nav-item" onclick="goTo('cronograma', this)">
+      <span class="nav-icon">📅</span> Cronograma
+    </button>
+    <button class="nav-item" onclick="goTo('materias', this)">
+      <span class="nav-icon">📚</span> Matérias
+    </button>
+    <button class="nav-item" onclick="goTo('formulas', this)">
+      <span class="nav-icon">⚗</span> Fórmulas
+    </button>
+
+    <div class="sidebar-bottom">
+      <div class="user-card" onclick="abrirPerfil()">
+        <div class="avatar" id="sidebar-avatar">?</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-name">Carregando...</div>
+          <div class="user-plan">Editar perfil</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CONTEÚDO PRINCIPAL -->
+  <main class="main">
+
+    <!-- ── HOJE ── -->
+    <div id="page-hoje" class="page active">
+      <div class="page-content">
+        <div class="ph" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <div class="ph-eyebrow" id="hoje-eyebrow">Carregando...</div>
+            <div class="ph-title">Bom dia, <span id="hoje-nome" style="color:var(--coral)">...</span></div>
+            <div class="ph-sub">Toque numa matéria do seu cronograma para criar uma tarefa.</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="baixarFichaHoje()" style="margin-top:.4rem;white-space:nowrap">
+            📄 Ficha do dia
+          </button>
+        </div>
+
+        <!-- Rotinas diárias (recorrentes) -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>🔁 Rotinas diárias</span>
+          </div>
+          <div id="rotinas-lista"></div>
+          <div class="add-row" style="margin-top:.5rem">
+            <input class="inp" id="rotina-inp" placeholder="Nova rotina diária..." onkeydown="if(event.key==='Enter') addRotina()">
+            <button class="btn btn-ghost btn-sm" onclick="addRotina()">+ Add</button>
+          </div>
+        </div>
+
+        <!-- Rotina do dia (vem do cronograma) -->
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Sua rotina de hoje</div>
+          <div id="rotina-lista">
+            <div class="empty-state">Carregando cronograma...</div>
+          </div>
+        </div>
+
+        <!-- Card de pergunta (aparece ao clicar numa matéria) -->
+        <div id="question-card" style="display:none"></div>
+
+        <!-- Tarefas do dia -->
+        <div class="card">
+          <div class="card-title">Tarefas de hoje</div>
+          <div id="tarefas-lista">
+            <div class="empty-state">Nenhuma tarefa ainda.</div>
+          </div>
+          <div class="divider"></div>
+          <div class="add-row">
+            <input class="inp" id="free-task-inp" placeholder="Adicionar tarefa livre..." onkeydown="if(event.key==='Enter') addFreeTask()">
+            <button class="btn btn-ghost btn-sm" onclick="addFreeTask()">+ Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CRONOGRAMA ── -->
+    <div id="page-cronograma" class="page">
+      <div class="page-content" style="max-width:100%">
+        <div class="ph" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <div class="ph-eyebrow">Organização</div>
+            <div class="ph-title">Cronograma Semanal</div>
+            <div class="ph-sub">Clique em qualquer célula da grade para adicionar uma atividade.</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="abrirImportModal()" style="margin-top:.4rem;white-space:nowrap;display:flex;align-items:center;gap:.4rem">
+            ⬆ Importar cronograma
+          </button>
+        </div>
+        <div class="sched-grid-wrap">
+          <div id="sched-grid" class="sched-grid-inner">
+            <div class="empty-state" style="padding:2rem;width:100%">Carregando cronograma...</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── MATÉRIAS ── -->
+    <div id="page-materias" class="page">
+      <div class="page-content">
+        <div class="ph">
+          <div class="ph-eyebrow">Configuração</div>
+          <div class="ph-title">Minhas Matérias</div>
+          <div class="ph-sub">Adicione as matérias que você está estudando.</div>
+        </div>
+
+        <div class="card" style="margin-bottom:1rem">
+          <div class="card-title">Nova matéria</div>
+          <div class="form-row">
+            <input class="inp" id="mat-nome" placeholder="Nome da matéria (ex: ⚡ Física)" onkeydown="if(event.key==='Enter') addSubject()">
+            <select class="inp" id="mat-color" style="max-width:160px">
+              <option value="#e8420a">🔴 Coral</option>
+              <option value="#c97000">🟡 Âmbar</option>
+              <option value="#1a7a4a">🟢 Verde</option>
+              <option value="#1a4fd4">🔵 Azul</option>
+              <option value="#6e3fd4">🟣 Roxo</option>
+              <option value="#1a1814">⚫ Carvão</option>
+            </select>
+            <button class="btn btn-coral" onclick="addSubject()">Adicionar</button>
+          </div>
+        </div>
+
+        <div id="materias-lista">
+          <div class="empty-state">Nenhuma matéria cadastrada ainda.</div>
+        </div>
+
+        <!-- ── CÓDIGO DA TURMA ── -->
+        <div style="margin-top:2rem">
+          <div class="ph-eyebrow" style="margin-bottom:.8rem">Compartilhar com a turma</div>
+
+          <!-- Resgatar código -->
+          <div class="card">
+            <div class="card-title">Tenho um código</div>
+            <p style="font-size:.82rem;color:var(--muted);margin-bottom:.9rem;line-height:1.5">
+              Recebeu um código de um colega? Cole aqui para ativar premium e importar as matérias dele.
+            </p>
+            <div class="add-row">
+              <input class="inp" id="inp-resgatar" placeholder="Ex: LC3042"
+                     style="font-family:monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase"
+                     onkeydown="if(event.key==='Enter') resgatarCodigo()">
+              <button class="btn btn-coral" onclick="resgatarCodigo()">Ativar →</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- calc embutido em matérias — sem página separada -->
+
+    <!-- ── FÓRMULAS ── -->
+    <div id="page-formulas" class="page">
+      <div class="page-content">
+        <div class="ph">
+          <div class="ph-eyebrow">Consulta</div>
+          <div class="ph-title">Base de Fórmulas</div>
+          <div class="ph-sub">Física e Matemática — clique em uma fórmula para ver os detalhes.</div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div style="padding:.8rem 1rem;border-bottom:1px solid var(--border)">
+            <input class="fp-search" id="pg-search" placeholder="Buscar fórmula..." oninput="filtrarFormulasPg()">
+          </div>
+          <div style="padding:.65rem 1rem;border-bottom:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem">
+            <div id="pg-subject-tabs" style="display:flex;gap:.4rem;flex-wrap:wrap"></div>
+            <select id="pg-topic-select" class="fp-topic-select" onchange="filtrarFormulasPg()">
+              <option value="">Todos os tópicos</option>
+            </select>
+          </div>
+          <div id="pg-formula-list" style="padding:.7rem .9rem">
+            <p style="font-size:.8rem;color:var(--muted)">Carregando fórmulas...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- PAINEL DE FÓRMULAS -->
+<div id="formula-panel-overlay" onclick="fecharPainelFormulas()"></div>
+<div id="formula-panel">
+  <div class="fp-header">
+    <div class="fp-title">
+      <span>⚗ Fórmulas</span>
+      <button class="modal-close" onclick="fecharPainelFormulas()">✕</button>
+    </div>
+    <input class="fp-search" id="fp-search" placeholder="Buscar fórmula..." oninput="filtrarFormulas()">
+  </div>
+  <div class="fp-filters">
+    <div class="fp-subject-tabs" id="fp-subject-tabs"></div>
+    <select class="fp-topic-select" id="fp-topic-select" onchange="filtrarFormulas()">
+      <option value="">Todos os tópicos</option>
+    </select>
+  </div>
+  <div class="fp-body" id="fp-formula-list">
+    <p style="font-size:.8rem;color:var(--muted);padding:.3rem 0">Carregando fórmulas...</p>
+  </div>
+</div>
+
+<!-- TIMER FLUTUANTE -->
+<div id="timer-float">
+  <div id="timer-panel" style="display:none">
+    <div style="display:flex;gap:.3rem;margin-bottom:.8rem">
+      <button class="timer-mode-btn active" id="tbtn-pomodoro" onclick="setTimerMode('pomodoro')">🍅 Pomodoro</button>
+      <button class="timer-mode-btn" id="tbtn-livre" onclick="setTimerMode('livre')">⏱ Livre</button>
+    </div>
+    <div style="text-align:center">
+      <svg width="120" height="120" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="var(--border)" stroke-width="5"/>
+        <circle id="timer-ring" cx="50" cy="50" r="42" fill="none" stroke="var(--coral)" stroke-width="5"
+          stroke-dasharray="264" stroke-dashoffset="0" stroke-linecap="round"
+          transform="rotate(-90 50 50)" style="transition:stroke-dashoffset .6s linear"/>
+        <text x="50" y="46" text-anchor="middle" dominant-baseline="middle"
+          font-size="20" font-weight="700" fill="#1a1814" font-family="Geist,sans-serif"
+          id="timer-big">25:00</text>
+        <text x="50" y="63" text-anchor="middle" dominant-baseline="middle"
+          font-size="8" fill="#8a8278" font-family="Geist,sans-serif"
+          letter-spacing="1" id="timer-phase-lbl">FOCO</text>
+      </svg>
+    </div>
+    <div style="display:flex;gap:.4rem;justify-content:center;margin:.2rem 0 .5rem">
+      <button class="btn btn-coral btn-sm" id="timer-start-btn" onclick="startPauseTimer()" style="min-width:95px">▶ Iniciar</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetTimer()" title="Reiniciar">↺</button>
+    </div>
+    <div id="timer-settings" style="display:flex;align-items:center;justify-content:center;gap:.35rem;font-size:.75rem;color:var(--muted)">
+      Foco <input id="pomo-work" class="timer-inp" type="number" value="25" min="1" max="90"> min
+      &nbsp;·&nbsp; Pausa <input id="pomo-break" class="timer-inp" type="number" value="5" min="1" max="30"> min
+    </div>
+  </div>
+  <div id="timer-bubble" onclick="toggleTimerPanel()" title="Cronômetro / Pomodoro">
+    ⏱ <span id="timer-display">25:00</span>
+  </div>
+</div>
+
+<!-- MODAL DE PERFIL -->
+<div id="profile-modal" style="display:none">
+  <div class="modal-overlay" onclick="fecharPerfil()"></div>
+  <div class="modal-box">
+    <div class="modal-header">
+      <span>⚙️ Meu Perfil</span>
+      <button class="modal-close" onclick="fecharPerfil()">✕</button>
+    </div>
+
+    <!-- Avatar preview + emoji grid -->
+    <div style="text-align:center;margin-bottom:1.1rem">
+      <div id="profile-avatar-preview" style="width:54px;height:54px;border-radius:50%;
+        background:linear-gradient(135deg,var(--coral),var(--amber));
+        display:flex;align-items:center;justify-content:center;
+        font-size:1.6rem;margin:0 auto .7rem;border:2px solid var(--border)">📚</div>
+      <div id="profile-emoji-grid" style="display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;max-width:260px;margin:0 auto"></div>
+    </div>
+
+    <label style="display:block;margin-bottom:.8rem">
+      <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.3rem">Nome</div>
+      <input class="inp" id="profile-name-inp" placeholder="Seu nome">
+    </label>
+
+    <label style="display:block;margin-bottom:.8rem">
+      <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.45rem">Tema</div>
+      <div id="profile-temas" style="display:flex;gap:.5rem;align-items:center"></div>
+    </label>
+
+    <label style="display:block;margin-bottom:1.2rem">
+      <div style="font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.3rem">Meta diária de estudo</div>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <input class="inp" id="profile-goal-inp" type="number" min="0.5" max="16" step="0.5" value="4" style="max-width:75px">
+        <span style="font-size:.84rem;color:var(--muted)">horas por dia</span>
+      </div>
+    </label>
+
+    <div style="display:flex;gap:.5rem">
+      <button class="btn btn-ghost btn-sm" onclick="logOut()" style="color:#c00;border-color:#fcc">Sair da conta</button>
+      <button class="btn btn-coral" style="flex:1" onclick="salvarPerfil()">Salvar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE IMPORTAÇÃO -->
+<div id="import-modal" style="display:none">
+  <div class="modal-overlay" onclick="fecharImportModal()"></div>
+  <div class="modal-box">
+    <div id="import-modal-content"></div>
+  </div>
+</div>
+
+<!-- NOTIFICAÇÃO -->
+<div class="notif" id="notif"></div>
+
+
+<!-- Scripts -->
+<script>
+  // ── Supabase setup ──────────────────────────────────────────
+  const SUPABASE_URL = 'https://ioeqbrecwteyvkhktuja.supabase.co'
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlvZXFicmVjd3RleXZraGt0dWphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0NzYxMjYsImV4cCI6MjA5NTA1MjEyNn0.jpLfb0sa-l73WKEEbgZi2-W_XCi2Qvaoc4s-vEFT2VA'
+  const { createClient } = supabase
+  const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  let currentUser = null
+  let currentSession = null
+  let subjects = []
+
+  const API = 'https://ioeqbrecwteyvkhktuja.supabase.co/rest/v1'
+
+  // Faz chamadas ao banco usando fetch direto (mais confiável que o client JS)
+  async function dbInsert(table, body) {
+    const res = await fetch(`${API}/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(body)
+    })
+    const data = await res.json()
+    if (!res.ok) return { data: null, error: data }
+    return { data, error: null }
+  }
+
+  async function dbSelect(table, filters = '') {
+    const res = await fetch(`${API}/${table}?${filters}&order=created_at`, {
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token
+      }
+    })
+    const data = await res.json()
+    if (!res.ok) return []
+    return data
+  }
+
+  async function dbDelete(table, id) {
+    await fetch(`${API}/${table}?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token
+      }
+    })
+  }
+
+  async function dbUpdate(table, id, body) {
+    await fetch(`${API}/${table}?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    })
+  }
+
+  // ── Auth ────────────────────────────────────────────────────
+  function loginGoogle() {
+    db.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href }
+    })
+  }
+
+  function logOut() {
+    db.auth.signOut()
+  }
+
+  db.auth.onAuthStateChange(async (event, session) => {
+    // Só volta para login se o usuário realmente saiu
+    if (event === 'SIGNED_OUT') {
+      currentUser = null
+      currentSession = null
+      document.getElementById('login-screen').style.display = 'flex'
+      document.getElementById('app').style.display = 'none'
+      return
+    }
+
+    if (session?.user) {
+      const primeiroLogin = !currentUser
+      currentUser = session.user
+      currentSession = session
+      document.getElementById('login-screen').style.display = 'none'
+      document.getElementById('app').style.display = 'block'
+      // Só inicializa o app uma vez (evita re-render em token refresh etc.)
+      if (primeiroLogin) {
+        await onLogin()
+      }
+    }
+  })
+
+  async function onLogin() {
+    const rawName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]
+    const perfil = JSON.parse(localStorage.getItem(`cora_perfil_${currentUser.id}`) || '{}')
+    const name = perfil.nome || rawName
+    const avatar = perfil.emoji || rawName[0].toUpperCase()
+    if (perfil.tema) aplicarTema(perfil.tema)
+    document.getElementById('sidebar-name').textContent = name
+    document.getElementById('sidebar-avatar').textContent = avatar
+    document.getElementById('hoje-nome').textContent = name.split(' ')[0]
+
+    // Dia e saudação
+    const dias = ['domingo','segunda','terça','quarta','quinta','sexta','sábado']
+    const horas = new Date().getHours()
+    const saudacao = horas < 12 ? 'Bom dia,' : horas < 18 ? 'Boa tarde,' : 'Boa noite,'
+    document.querySelector('.ph-title').innerHTML = `${saudacao} <span style="color:var(--coral)">${name.split(' ')[0]}</span>`
+    document.getElementById('hoje-eyebrow').textContent =
+      `${dias[new Date().getDay()].charAt(0).toUpperCase() + dias[new Date().getDay()].slice(1)} · ${new Date().toLocaleDateString('pt-BR', {day:'numeric', month:'long'})}`
+
+    await loadSubjects()
+    await loadHoje()
+  }
+
+  // ── Navegação ────────────────────────────────────────────────
+  function goTo(pageId, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+    document.getElementById('page-' + pageId).classList.add('active')
+    if (btn) btn.classList.add('active')
+
+    if (pageId === 'hoje') loadHoje()
+    if (pageId === 'cronograma') loadCronograma()
+    if (pageId === 'materias') { loadCalcData(); loadMaterias() }
+    if (pageId === 'formulas') loadFormulasPage()
+  }
+
+  // ── MATÉRIAS ─────────────────────────────────────────────────
+  async function loadSubjects() {
+    subjects = await dbSelect('subjects', 'select=*&order=name')
+    return subjects
+  }
+
+  async function loadMaterias() {
+    await loadSubjects()
+    const lista = document.getElementById('materias-lista')
+    if (subjects.length === 0) {
+      lista.innerHTML = '<div class="empty-state">Nenhuma matéria cadastrada ainda.<br>Adicione sua primeira matéria acima!</div>'
+      return
+    }
+
+    lista.innerHTML = subjects.map(s => {
+      const d = getSubjectData(s.id)
+      const target = d.target || 6
+      const mediaFinal = calcularMediaFinal(d.periods)
+      const mediaStr = mediaFinal !== null ? mediaFinal.toFixed(1) : null
+      const mediaClass = mediaFinal === null ? '' : mediaFinal >= target ? 'verde' : mediaFinal >= target*0.75 ? 'amarelo' : 'vermelho'
+      return `
+        <div class="calc-subject" id="calc-${s.id}" data-sid="${s.id}">
+          <div class="calc-header" onclick="toggleCalc('${s.id}')">
+            <div class="calc-dot" style="background:${s.color}"></div>
+            <div class="calc-name">${s.name}</div>
+            <div class="calc-media-badge ${mediaClass}">${mediaStr ? 'Final: '+mediaStr : '—'}</div>
+            <button class="btn-delete" style="margin-left:auto" onclick="event.stopPropagation();deleteSubject('${s.id}')">✕</button>
+            <span style="color:var(--muted);font-size:.75rem;margin-left:.3rem">▾</span>
+          </div>
+          <div class="calc-body" id="calc-body-${s.id}" style="display:none"></div>
+        </div>`
+    }).join('')
+
+    const sel = document.getElementById('sched-subject')
+    if (sel) sel.innerHTML = '<option value="">Selecione a matéria...</option>' +
+      subjects.map(s => `<option value="${s.id}">${s.name}</option>`).join('')
+  }
+
+  async function addSubject() {
+    const nome = document.getElementById('mat-nome').value.trim()
+    const color = document.getElementById('mat-color').value
+    if (!nome) { notify('Digite o nome da matéria!'); return }
+
+    const { data, error } = await dbInsert('subjects', {
+      user_id: currentUser.id, name: nome, icon: '', color
+    })
+
+    if (error) { notify('Erro: ' + JSON.stringify(error)); return }
+
+    document.getElementById('mat-nome').value = ''
+    notify('Matéria adicionada! ✓')
+    loadCalcData()
+    await loadMaterias()
+  }
+
+  async function deleteSubject(id) {
+    await dbDelete('subjects', id)
+    notify('Matéria removida.')
+    loadCalcData()
+    await loadMaterias()
+  }
+
+  // ── CRONOGRAMA — GRADE VISUAL ────────────────────────────────
+  const GRID_START = 6   // 06:00
+  const GRID_END   = 24  // 00:00 (meia-noite)
+  const HOUR_H     = 40  // px por hora (menor = grade mais compacta)
+  const CORES_PRESET = [
+    { hex:'#F5C800' }, { hex:'#E06010' }, { hex:'#DC2626' },
+    { hex:'#e8420a' }, { hex:'#16A34A' }, { hex:'#2563EB' },
+    { hex:'#0891B2' }, { hex:'#7C3AED' }, { hex:'#EC4899' },
+    { hex:'#6B7280' }, { hex:'#1a1814' },
+  ]
+  let corSelecionada = '#2563EB'
+
+  async function loadCronograma() {
+    await loadSubjects()
+    const blocos = await dbSelect('schedule', 'select=*,subjects(name,color)&order=day_of_week&order=start_time')
+    renderGrade(Array.isArray(blocos) ? blocos : [])
+  }
+
+  function renderGrade(blocos) {
+    const DIAS_FULL = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado']
+    const ORDER = [1,2,3,4,5,6,0]
+    const totalH = (GRID_END - GRID_START) * HOUR_H
+
+    // Agrupar por dia
+    const byDay = {}
+    ORDER.forEach(d => byDay[d] = [])
+    blocos.forEach(b => { if (byDay[b.day_of_week] !== undefined) byDay[b.day_of_week].push(b) })
+
+    // Coluna de horários
+    let timeLabels = ''
+    for (let h = GRID_START; h <= GRID_END; h++) {
+      const top = (h - GRID_START) * HOUR_H
+      timeLabels += `<div class="sched-time-label" style="top:${top}px">${h === 24 ? '00' : h.toString().padStart(2,'0')}:00</div>`
+    }
+
+    // Linhas de grade
+    let gridLines = ''
+    for (let h = GRID_START; h < GRID_END; h++) {
+      const top = (h - GRID_START) * HOUR_H
+      gridLines += `<div class="sched-grid-line" style="top:${top}px"></div>`
+      gridLines += `<div class="sched-grid-line half" style="top:${top + HOUR_H/2}px"></div>`
+    }
+
+    // Colunas dos dias
+    let dayCols = ''
+    ORDER.forEach(d => {
+      let blocksHtml = gridLines
+      byDay[d].forEach(b => {
+        const [sh, sm] = b.start_time.split(':').map(Number)
+        const [eh, em] = b.end_time.split(':').map(Number)
+        const startMin = sh * 60 + sm - GRID_START * 60
+        const endMin   = eh * 60 + em - GRID_START * 60
+        const top      = startMin / 60 * HOUR_H
+        const height   = Math.max((endMin - startMin) / 60 * HOUR_H - 2, 18)
+        const cor   = b.color || b.subjects?.color || '#2563EB'
+        const nome  = b.label || b.subjects?.name || '—'
+        const label = nome
+        blocksHtml += `
+          <div class="sched-block" style="top:${top}px;height:${height}px;background:${cor}"
+               title="${nome} · ${b.start_time.slice(0,5)}–${b.end_time.slice(0,5)}"
+               onmousedown="event.stopPropagation()"
+               onclick="selecionarBloco(event,'${b.id}',this)">
+            <span>${label}</span>
+            <div class="block-del" onclick="event.stopPropagation();removerBloco('${b.id}')">✕</div>
+            <div class="block-resize" onmousedown="startResize(event,'${b.id}',${startMin})"></div>
+          </div>`
+      })
+
+      dayCols += `
+        <div class="sched-day-col">
+          <div class="sched-day-header">${DIAS_FULL[d]}</div>
+          <div class="sched-day-body" style="height:${totalH}px"
+               onmousedown="gridDown(event,${d})">
+            ${blocksHtml}
+          </div>
+        </div>`
+    })
+
+    document.getElementById('sched-grid').innerHTML = `
+      <div class="sched-time-col">
+        <div class="sched-day-header"></div>
+        <div style="position:relative;height:${totalH}px">${timeLabels}</div>
+      </div>
+      ${dayCols}`
+  }
+
+  // ── GRADE: ARRASTAR PARA DEFINIR DURAÇÃO ────────────────────
+  let dragDay = null, dragStartMin = null, dragGhost = null, dragBody = null
+
+  function snapMin(relY) {
+    return Math.round((relY / HOUR_H) * 60 / 30) * 30
+  }
+  function minToStr(totalMin) {
+    const h = Math.min(Math.floor(totalMin / 60) + GRID_START, 23)
+    const m = totalMin % 60
+    return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`
+  }
+
+  function gridDown(e, day) {
+    if (e.target.closest('.sched-block') || e.target.closest('.inline-form')) return
+    e.preventDefault()
+    fecharInlineForm()
+
+    dragBody     = e.currentTarget
+    dragDay      = day
+    const rect   = dragBody.getBoundingClientRect()
+    dragStartMin = snapMin(e.clientY - rect.top)
+
+    dragGhost = document.createElement('div')
+    dragGhost.style.cssText = `position:absolute;left:2px;right:2px;pointer-events:none;
+      background:rgba(232,66,10,.18);border:1.5px dashed var(--coral);border-radius:5px;`
+    dragGhost.style.top    = (dragStartMin / 60 * HOUR_H) + 'px'
+    dragGhost.style.height = HOUR_H + 'px'
+    dragBody.appendChild(dragGhost)
+
+    // Listeners globais — funcionam mesmo se o mouse sair do elemento
+    document.addEventListener('mousemove', onDragMove)
+    document.addEventListener('mouseup',   onDragUp)
+  }
+
+  function onDragMove(e) {
+    if (!dragBody || !dragGhost) return
+    const rect   = dragBody.getBoundingClientRect()
+    const relY   = Math.max(0, Math.min(e.clientY - rect.top, dragBody.offsetHeight))
+    const curMin = snapMin(relY)
+    const lo     = Math.min(dragStartMin, curMin)
+    const hi     = Math.max(dragStartMin + 30, curMin + 30)
+    dragGhost.style.top    = (lo / 60 * HOUR_H) + 'px'
+    dragGhost.style.height = ((hi - lo) / 60 * HOUR_H) + 'px'
+  }
+
+  function onDragUp(e) {
+    document.removeEventListener('mousemove', onDragMove)
+    document.removeEventListener('mouseup',   onDragUp)
+    if (!dragBody || !dragGhost) return
+
+    const rect   = dragBody.getBoundingClientRect()
+    const relY   = Math.max(0, Math.min(e.clientY - rect.top, dragBody.offsetHeight))
+    const curMin = snapMin(relY)
+    const lo     = Math.min(dragStartMin, curMin)
+    const hi     = Math.max(dragStartMin + 30, curMin + 30)
+
+    dragGhost.remove()
+    const body = dragBody
+    const day  = dragDay
+    dragGhost = null; dragBody = null; dragStartMin = null; dragDay = null
+
+    inlineDay   = day
+    inlineStart = minToStr(lo)
+    mostrarInlineForm(body, inlineStart, minToStr(hi), lo / 60 * HOUR_H)
+  }
+
+  // ── RESIZE DE BLOCOS EXISTENTES ──────────────────────────────
+  let resizeId = null, resizeStartMin = null, resizeBlockEl = null, resizeBodyEl = null
+
+  function startResize(e, blockId, startMin) {
+    e.preventDefault()
+    e.stopPropagation()
+    resizeId       = blockId
+    resizeStartMin = startMin
+    resizeBlockEl  = e.target.closest('.sched-block')
+    resizeBodyEl   = resizeBlockEl.parentElement
+    document.addEventListener('mousemove', onResizeMove)
+    document.addEventListener('mouseup',   onResizeUp)
+  }
+
+  function onResizeMove(e) {
+    if (!resizeBlockEl) return
+    const rect      = resizeBodyEl.getBoundingClientRect()
+    const relY      = Math.max(0, Math.min(e.clientY - rect.top, resizeBodyEl.offsetHeight))
+    const newEndMin = Math.max(snapMin(relY), resizeStartMin + 30)
+    const newH      = Math.max((newEndMin - resizeStartMin) / 60 * HOUR_H - 2, 20)
+    resizeBlockEl.style.height = newH + 'px'
+  }
+
+  function onResizeUp(e) {
+    document.removeEventListener('mousemove', onResizeMove)
+    document.removeEventListener('mouseup',   onResizeUp)
+    if (!resizeBlockEl || !resizeId) return
+
+    const rect      = resizeBodyEl.getBoundingClientRect()
+    const relY      = Math.max(0, Math.min(e.clientY - rect.top, resizeBodyEl.offsetHeight))
+    const newEndMin = Math.max(snapMin(relY), resizeStartMin + 30)
+    const endStr    = minToStr(newEndMin)
+    const id        = resizeId
+
+    resizeId = null; resizeBlockEl = null; resizeBodyEl = null; resizeStartMin = null
+
+    dbUpdate('schedule', id, { end_time: endStr }).then(() => {
+      notify('Horário atualizado. ✓')
+      loadCronograma()
+    })
+  }
+
+  // ── INLINE FORM ───────────────────────────────────────────────
+  let inlineDay = 0, inlineStart = '08:00'
+
+  function mostrarInlineForm(bodyEl, startStr, endStr, topPx) {
+    fecharInlineForm()
+
+    const matOpts = subjects.map(s =>
+      `<option value="${s.name}" data-id="${s.id}" data-color="${s.color}">`).join('')
+    const dots = CORES_PRESET.map((c, i) =>
+      `<div class="inline-dot ${i===5?'sel':''}" style="background:${c.hex}"
+            data-hex="${c.hex}" onclick="selecionarCorInline(this)"></div>`).join('')
+
+    const form = document.createElement('div')
+    form.className = 'inline-form'
+    form.id = 'inline-form-active'
+    form.style.top = `${topPx}px`
+    form.innerHTML = `
+      <div class="inline-time-label">${startStr} → ${endStr}</div>
+      <datalist id="dl-subjects">${matOpts}</datalist>
+      <input class="inline-inp" id="inline-inp" list="dl-subjects"
+             placeholder="ESCOLA, FÍSICA, ACADEMIA..."
+             oninput="onInlineInput(this)"
+             onkeydown="onInlineKey(event)">
+      <div class="inline-footer">
+        <div style="display:flex;gap:3px;flex-wrap:wrap">${dots}</div>
+        <input type="time" class="inline-end" id="inline-end" value="${endStr}"
+               onkeydown="onInlineKey(event)">
+      </div>`
+
+    bodyEl.appendChild(form)
+    document.getElementById('inline-inp').focus()
+    setTimeout(() => document.addEventListener('mousedown', clickForaListener), 0)
+  }
+
+  function clickForaListener(e) {
+    if (!e.target.closest('.inline-form')) {
+      fecharInlineForm()
+      document.removeEventListener('mousedown', clickForaListener)
+    }
+  }
+
+  function fecharInlineForm() {
+    document.getElementById('inline-form-active')?.remove()
+    document.removeEventListener('mousedown', clickForaListener)
+  }
+
+  function selecionarCorInline(el) {
+    document.querySelectorAll('.inline-dot').forEach(d => d.classList.remove('sel'))
+    el.classList.add('sel')
+    corSelecionada = el.dataset.hex
+  }
+
+  function onInlineInput(inp) {
+    const match = subjects.find(s => s.name.toLowerCase() === inp.value.toLowerCase())
+    if (match) {
+      corSelecionada = match.color
+      document.querySelectorAll('.inline-dot').forEach(d => d.classList.remove('sel'))
+    }
+  }
+
+  function onInlineKey(e) {
+    if (e.key === 'Enter')  salvarInlineActivity()
+    if (e.key === 'Escape') fecharInlineForm()
+  }
+
+  async function salvarInlineActivity() {
+    const nome = (document.getElementById('inline-inp')?.value || '').trim()
+    const end  = document.getElementById('inline-end')?.value || ''
+    if (!nome) { fecharInlineForm(); return }
+    if (inlineStart >= end) { notify('Horário inválido!'); return }
+
+    const materia = subjects.find(s => s.name.toLowerCase() === nome.toLowerCase())
+    const payload = {
+      user_id: currentUser.id, day_of_week: inlineDay,
+      start_time: inlineStart, end_time: end,
+      subject_id: materia?.id || null,
+      label: materia ? null : nome.toUpperCase(),
+      color: materia ? materia.color : corSelecionada
+    }
+
+    fecharInlineForm()
+    const { error } = await dbInsert('schedule', payload)
+    if (error) { notify('Erro ao salvar!'); return }
+    notify('Adicionado! ✓')
+    await loadCronograma()
+  }
+
+  let blocoSelecionado = null
+
+  function selecionarBloco(e, id, el) {
+    e.stopPropagation()
+    // Clicou no mesmo → deseleciona
+    if (blocoSelecionado === id) {
+      el.classList.remove('sel-block')
+      blocoSelecionado = null
+      return
+    }
+    document.querySelectorAll('.sched-block').forEach(b => b.classList.remove('sel-block'))
+    el.classList.add('sel-block')
+    blocoSelecionado = id
+  }
+
+  function removerBloco(id) {
+    dbDelete('schedule', id).then(() => {
+      blocoSelecionado = null
+      notify('Removido.')
+      loadCronograma()
+    })
+  }
+
+  // Clicar fora de um bloco deseleciona
+  document.addEventListener('click', e => {
+    if (blocoSelecionado && !e.target.closest('.sched-block')) {
+      document.querySelectorAll('.sched-block').forEach(b => b.classList.remove('sel-block'))
+      blocoSelecionado = null
+    }
+  })
+
+  // ── CÓDIGOS DE TURMA ─────────────────────────────────────────
+  async function resgatarCodigo() {
+    const code = document.getElementById('inp-resgatar').value.trim().toUpperCase()
+    if (!code) { notify('Digite um código!'); return }
+
+    const res = await fetch(`${API}/rpc/redeem_promo_code`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_code: code })
+    })
+    const result = await res.json()
+
+    if (result.ok) {
+      notify(result.msg || 'Premium ativado!')
+      document.getElementById('inp-resgatar').value = ''
+      await loadSubjects()
+      await loadMaterias()
+    } else {
+      notify(result.msg || 'Código inválido')
+    }
+  }
+
+  // ── HOJE ─────────────────────────────────────────────────────
+  let selectedBlock = null
+
+  async function loadHoje() {
+    if (currentUser) renderRotinas()
+    const dayOfWeek = new Date().getDay()
+    const today = new Date().toISOString().split('T')[0]
+
+    const blocos = await dbSelect('schedule', `select=*,subjects(id,name,color)&day_of_week=eq.${dayOfWeek}&order=start_time`)
+
+    const rotinaLista = document.getElementById('rotina-lista')
+    if (!blocos || !Array.isArray(blocos) || blocos.length === 0) {
+      rotinaLista.innerHTML = `
+        <div class="empty-state">
+          Nenhuma atividade no cronograma de hoje.<br>
+          <button class="btn btn-ghost btn-sm" style="margin-top:.7rem" onclick="goTo('cronograma', document.querySelectorAll('.nav-item')[1])">
+            Configurar cronograma →
+          </button>
+        </div>`
+    } else {
+      rotinaLista.innerHTML = blocos.map(b => {
+        const isMateria = b.subject_id && b.subjects
+        const nome  = isMateria ? b.subjects.name : (b.label || 'Atividade')
+        const cor   = isMateria ? b.subjects.color : (b.color || '#888')
+        const onclick = isMateria
+          ? `onclick="selectBlock('${b.id}','${b.subjects.id}','${nome.replace(/'/g,"\\'")}','📖','${cor}')"`
+          : ''
+        return `
+        <div class="rotina-block ${isMateria ? '' : 'info-block'}" id="block-${b.id}" ${onclick}>
+          <span class="block-time">${b.start_time.slice(0,5)}</span>
+          <span class="block-dot" style="background:${cor}"></span>
+          <span class="block-name">${nome}</span>
+          <span class="block-dur">${calcDur(b.start_time, b.end_time)}</span>
+          ${isMateria ? `<div class="block-check" id="check-${b.id}"></div>` : ''}
+        </div>`
+      }).join('')
+    }
+
+    const tarefas = await dbSelect('daily_sessions', `select=*,subjects(name,color)&date=eq.${today}`)
+    renderTarefas(Array.isArray(tarefas) ? tarefas : [])
+  }
+
+  function calcDur(start, end) {
+    const [sh, sm] = start.split(':').map(Number)
+    const [eh, em] = end.split(':').map(Number)
+    const mins = (eh * 60 + em) - (sh * 60 + sm)
+    return mins >= 60 ? `${Math.floor(mins/60)}h${mins%60 ? ' '+mins%60+'min' : ''}` : `${mins}min`
+  }
+
+  function selectBlock(blockId, subjectId, name, icon, color) {
+    // Desmarca todos
+    document.querySelectorAll('.rotina-block').forEach(b => b.classList.remove('selected'))
+    document.getElementById('block-' + blockId).classList.add('selected')
+    selectedBlock = { blockId, subjectId, name, icon, color }
+
+    // Mostra card de pergunta
+    const qCard = document.getElementById('question-card')
+    qCard.style.display = 'block'
+    qCard.innerHTML = `
+      <div class="question-card">
+        <div class="q-eyebrow">${icon} ${name}</div>
+        <div class="q-title">O que você vai estudar em <strong>${name}</strong> hoje?</div>
+        <input class="q-input" id="q-inp" placeholder="Ex: Capítulo 3, Lista de exercícios, Revisão..." onkeydown="if(event.key==='Enter') criarTarefa()">
+        <div class="q-actions">
+          <button class="q-btn q-btn-ghost" onclick="cancelarPergunta()">Cancelar</button>
+          <button class="q-btn q-btn-primary" onclick="criarTarefa()">Criar tarefa →</button>
+        </div>
+      </div>
+    `
+    setTimeout(() => document.getElementById('q-inp').focus(), 100)
+  }
+
+  function cancelarPergunta() {
+    document.getElementById('question-card').style.display = 'none'
+    document.querySelectorAll('.rotina-block').forEach(b => b.classList.remove('selected'))
+    selectedBlock = null
+  }
+
+  async function criarTarefa() {
+    const goal = document.getElementById('q-inp').value.trim()
+    if (!goal) { notify('Escreva o que vai estudar!'); return }
+
+    const today = new Date().toISOString().split('T')[0]
+    const { error } = await dbInsert('daily_sessions', {
+      user_id: currentUser.id,
+      subject_id: selectedBlock.subjectId,
+      date: today, study_goal: goal,
+      is_free_task: false, status: 'pending'
+    })
+
+    if (error) { notify('Erro ao criar tarefa!'); return }
+
+    cancelarPergunta()
+    notify('Tarefa criada! ✓')
+    const tarefas = await dbSelect('daily_sessions', `select=*,subjects(name,color)&date=eq.${today}`)
+    renderTarefas(Array.isArray(tarefas) ? tarefas : [])
+  }
+
+  async function addFreeTask() {
+    const inp = document.getElementById('free-task-inp')
+    const goal = inp.value.trim()
+    if (!goal) return
+
+    const today = new Date().toISOString().split('T')[0]
+    await dbInsert('daily_sessions', {
+      user_id: currentUser.id, subject_id: null,
+      date: today, study_goal: goal,
+      is_free_task: true, status: 'pending'
+    })
+    inp.value = ''
+    notify('Tarefa adicionada! ✓')
+    const tarefas = await dbSelect('daily_sessions', `select=*,subjects(name,color)&date=eq.${today}`)
+    renderTarefas(Array.isArray(tarefas) ? tarefas : [])
+  }
+
+  function renderTarefas(tarefas) {
+    const lista = document.getElementById('tarefas-lista')
+    if (tarefas.length === 0) {
+      lista.innerHTML = '<div class="empty-state">Nenhuma tarefa ainda. Clique em uma matéria acima!</div>'
+      return
+    }
+    lista.innerHTML = tarefas.map(t => `
+      <div class="tarefa-item ${t.status === 'done' ? 'done' : ''}" onclick="toggleTarefa('${t.id}', '${t.status}', this)">
+        <div class="tarefa-cb ${t.status === 'done' ? 'done' : ''}">${t.status === 'done' ? '✓' : ''}</div>
+        <div class="tarefa-info">
+          <div class="tarefa-label ${t.status === 'done' ? 'done' : ''}">${t.study_goal}</div>
+          ${t.subjects ? `<div class="tarefa-sub">${t.subjects.icon || ''} ${t.subjects.name}</div>` : '<div class="tarefa-sub">Tarefa livre</div>'}
+        </div>
+        ${t.status === 'done' ? '<span class="chip chip-green">Feito</span>' : ''}
+      </div>
+    `).join('')
+  }
+
+  async function toggleTarefa(id, status, el) {
+    const newStatus = status === 'done' ? 'pending' : 'done'
+    await dbUpdate('daily_sessions', id, { status: newStatus })
+    const today = new Date().toISOString().split('T')[0]
+    const tarefas = await dbSelect('daily_sessions', `select=*,subjects(name,color)&date=eq.${today}`)
+    renderTarefas(Array.isArray(tarefas) ? tarefas : [])
+  }
+
+  // ── IMPORT MODAL ─────────────────────────────────────────────
+  let csvParsedBlocos = []
+
+  function abrirImportModal() {
+    document.getElementById('import-modal').style.display = 'block'
+    document.getElementById('import-modal-content').innerHTML = renderImportOpcoes()
+  }
+
+  function fecharImportModal() {
+    document.getElementById('import-modal').style.display = 'none'
+    csvParsedBlocos = []
+  }
+
+  function renderImportOpcoes() {
+    return `
+      <div class="modal-header">
+        <span>⬆ Importar Cronograma</span>
+        <button class="modal-close" onclick="fecharImportModal()">✕</button>
+      </div>
+      <p style="font-size:.82rem;color:#888;margin-bottom:.9rem">Escolha como importar seu cronograma existente:</p>
+      <div class="import-options">
+        <div class="import-option" onclick="document.getElementById('csv-upload').click()">
+          <div class="import-icon">📁</div>
+          <div>
+            <div class="import-label">Via planilha (CSV)</div>
+            <div class="import-desc">Exporte seu Excel como .csv e importe aqui</div>
+          </div>
+        </div>
+        <div class="import-option disabled">
+          <div class="import-icon">🤖</div>
+          <div>
+            <div class="import-label">Via foto (IA) &nbsp;<span style="background:rgba(232,66,10,.25);color:var(--coral);font-size:.65rem;padding:2px 7px;border-radius:20px;font-weight:700">Em breve</span></div>
+            <div class="import-desc">Tire foto do seu cronograma e a IA monta automaticamente</div>
+          </div>
+        </div>
+      </div>
+      <div class="csv-hint">
+        <strong>Formato do CSV:</strong><br>
+        Colunas: <code>dia, inicio, fim, atividade, cor</code><br>
+        Exemplo: <code>Segunda, 08:00, 17:00, ESCOLA, #F5C800</code><br>
+        Dias aceitos: Segunda, Terça, Quarta, Quinta, Sexta, Sábado, Domingo
+      </div>
+      <input type="file" id="csv-upload" accept=".csv,.txt" style="display:none" onchange="handleCSVUpload(this)">`
+  }
+
+  async function handleCSVUpload(input) {
+    const file = input.files[0]
+    if (!file) return
+    input.value = ''
+
+    const text = await file.text()
+    const rows = parseCSVSimple(text)
+
+    if (rows.length < 2) { notify('CSV vazio ou inválido!'); return }
+
+    const header = rows[0].map(h => h.toLowerCase().trim()
+      .normalize('NFD').replace(/[̀-ͯ]/g, ''))
+
+    const diaIdx = header.findIndex(h => h.includes('dia') || h === 'day')
+    const iniIdx = header.findIndex(h => h.includes('inicio') || h.includes('start') || h.includes('hora'))
+    const fimIdx = header.findIndex(h => h.includes('fim') || h.includes('end'))
+    const atIdx  = header.findIndex(h => h.includes('atividade') || h.includes('label') || h.includes('nome') || h.includes('name'))
+    const corIdx = header.findIndex(h => h.includes('cor') || h.includes('color'))
+
+    if (diaIdx < 0 || iniIdx < 0 || fimIdx < 0 || atIdx < 0) {
+      document.getElementById('import-modal-content').innerHTML = `
+        <div class="modal-header">
+          <span>❌ Formato inválido</span>
+          <button class="modal-close" onclick="fecharImportModal()">✕</button>
+        </div>
+        <p style="font-size:.85rem;color:#f87171;margin:.5rem 0">Colunas necessárias não encontradas.<br>Colunas no seu arquivo: <code>${rows[0].join(', ')}</code></p>
+        <p style="font-size:.82rem;color:#888">O CSV precisa ter: <code>dia, inicio, fim, atividade</code></p>
+        <button class="btn btn-ghost btn-sm" style="margin-top:1rem" onclick="abrirImportModal()">← Voltar</button>`
+      return
+    }
+
+    const DIA_MAP = {
+      'domingo':0,'sunday':0,'dom':0,'0':0,
+      'segunda':1,'monday':1,'seg':1,'segunda-feira':1,'1':1,
+      'terca':2,'tuesday':2,'ter':2,'terca-feira':2,'2':2,
+      'quarta':3,'wednesday':3,'qua':3,'quarta-feira':3,'3':3,
+      'quinta':4,'thursday':4,'qui':4,'quinta-feira':4,'4':4,
+      'sexta':5,'friday':5,'sex':5,'sexta-feira':5,'5':5,
+      'sabado':6,'saturday':6,'sab':6,'6':6,
+    }
+
+    const blocos = []
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i]
+      if (r.length < 3 || !r[diaIdx]) continue
+      const diaStr = r[diaIdx].trim().toLowerCase()
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+      const dia = DIA_MAP[diaStr]
+      if (dia === undefined) continue
+      const inicio = r[iniIdx]?.trim()
+      const fim    = r[fimIdx]?.trim()
+      const label  = r[atIdx]?.trim().toUpperCase()
+      const cor    = corIdx >= 0 ? (r[corIdx]?.trim() || '#2563EB') : '#2563EB'
+      if (!inicio || !fim || !label) continue
+      blocos.push({ user_id: currentUser.id, day_of_week: dia,
+        start_time: inicio, end_time: fim, label, color: cor, subject_id: null })
+    }
+
+    if (blocos.length === 0) {
+      notify('Nenhuma atividade válida encontrada no CSV.')
+      return
+    }
+
+    csvParsedBlocos = blocos
+    const DIAS = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb']
+    const preview = blocos.slice(0, 6).map(b => `
+      <div class="import-preview-item">
+        <strong>${DIAS[b.day_of_week]}</strong> ${b.start_time}–${b.end_time} · ${b.label}
+      </div>`).join('')
+    const extra = blocos.length > 6
+      ? `<div style="font-size:.76rem;color:#666;padding:.2rem 0">...e mais ${blocos.length - 6} atividades</div>` : ''
+
+    document.getElementById('import-modal-content').innerHTML = `
+      <div class="modal-header">
+        <span>✅ ${blocos.length} atividades encontradas</span>
+        <button class="modal-close" onclick="fecharImportModal()">✕</button>
+      </div>
+      ${preview}${extra}
+      <div style="margin-top:.8rem;padding:.6rem .8rem;background:rgba(220,38,38,.12);border-radius:8px;font-size:.79rem;color:#f87171">
+        ⚠️ Isso vai <strong>substituir</strong> todo o seu cronograma atual.
+      </div>
+      <div style="display:flex;gap:.5rem;margin-top:1rem">
+        <button class="btn btn-ghost btn-sm" onclick="abrirImportModal()">← Voltar</button>
+        <button class="btn btn-coral" onclick="confirmarImportCSV()">Confirmar importação →</button>
+      </div>`
+  }
+
+  async function confirmarImportCSV() {
+    if (!csvParsedBlocos.length) return
+    document.getElementById('import-modal-content').innerHTML =
+      `<div style="text-align:center;padding:2rem;color:#888">Importando...</div>`
+
+    // Apaga cronograma atual
+    await fetch(`${API}/schedule?user_id=eq.${currentUser.id}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentSession.access_token }
+    })
+
+    // Insere todos os blocos de uma vez
+    const res = await fetch(`${API}/schedule`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(csvParsedBlocos)
+    })
+
+    fecharImportModal()
+    if (res.ok) {
+      notify(`✓ ${csvParsedBlocos.length} atividades importadas!`)
+      csvParsedBlocos = []
+      await loadCronograma()
+    } else {
+      const err = await res.json()
+      notify('Erro ao importar: ' + (err.message || JSON.stringify(err)))
+    }
+  }
+
+  function parseCSVSimple(text) {
+    const rows = []
+    for (const line of text.split(/\r?\n/)) {
+      if (!line.trim()) continue
+      const row = []; let cur = '', inQ = false
+      for (const ch of line) {
+        if (ch === '"') inQ = !inQ
+        else if (ch === ',' && !inQ) { row.push(cur.trim()); cur = '' }
+        else cur += ch
+      }
+      row.push(cur.trim())
+      rows.push(row)
+    }
+    return rows
+  }
+
+  // ── CALCULADORA DE MÉDIAS (com Períodos) ─────────────────────────────────────
+  let calcData = {}
+  const calcActivePeriod = {} // aba ativa por matéria (só em memória)
+
+  function loadCalcData() {
+    if (!currentUser) return
+    const stored = localStorage.getItem(`cora_calc_${currentUser.id}`)
+    const raw = stored ? JSON.parse(stored) : {}
+    calcData = {}
+    for (const [sid, d] of Object.entries(raw)) {
+      if (Array.isArray(d.assessments) && !d.periods) {
+        calcData[sid] = { periods: [{ name: 'P1', weight: 1, assessments: d.assessments }], target: d.target || 6 }
+      } else {
+        calcData[sid] = d
+      }
+    }
+  }
+
+  function saveCalcData() {
+    if (!currentUser) return
+    localStorage.setItem(`cora_calc_${currentUser.id}`, JSON.stringify(calcData))
+  }
+
+  function getSubjectData(sid) {
+    if (!calcData[sid]) calcData[sid] = { periods: [], target: 6 }
+    if (!calcData[sid].periods) calcData[sid].periods = []
+    return calcData[sid]
+  }
+
+  function calcularMedia(assessments) {
+    const valid = (assessments||[]).filter(a => a.grade !== null && a.grade !== undefined && a.grade !== '')
+    if (!valid.length) return null
+    const totalW = valid.reduce((s,a) => s + (parseFloat(a.weight)||1), 0)
+    const soma   = valid.reduce((s,a) => s + parseFloat(a.grade)*(parseFloat(a.weight)||1), 0)
+    return totalW > 0 ? soma / totalW : null
+  }
+
+  function calcularMediaFinal(periods) {
+    const valid = (periods||[]).filter(p => calcularMedia(p.assessments||[]) !== null)
+    if (!valid.length) return null
+    const totalW = valid.reduce((s,p) => s + (parseFloat(p.weight)||1), 0)
+    const soma   = valid.reduce((s,p) => s + calcularMedia(p.assessments||[]) * (parseFloat(p.weight)||1), 0)
+    return totalW > 0 ? soma / totalW : null
+  }
+
+  function quantoPrecisoFinal(periods, target) {
+    // Quanto preciso tirar nos bimestres restantes (sem nota) para atingir a meta
+    const done = (periods||[]).filter(p => calcularMedia(p.assessments||[]) !== null)
+    const todo = (periods||[]).filter(p => calcularMedia(p.assessments||[]) === null)
+    if (!todo.length || !periods.length) return null
+    const totalW  = periods.reduce((s,p) => s + (parseFloat(p.weight)||1), 0)
+    const doneSum = done.reduce((s,p) => s + calcularMedia(p.assessments||[]) * (parseFloat(p.weight)||1), 0)
+    const todoW   = todo.reduce((s,p) => s + (parseFloat(p.weight)||1), 0)
+    return (target * totalW - doneSum) / todoW
+  }
+
+  function loadCalculadora() {
+    const container = document.getElementById('calc-lista')
+    if (!container) return
+    if (!subjects || subjects.length === 0) {
+      container.innerHTML = `<div class="empty-state">Nenhuma matéria cadastrada ainda.<br>
+        <button class="btn btn-ghost btn-sm" style="margin-top:.7rem"
+          onclick="goTo('materias', document.querySelectorAll('.nav-item')[2])">
+          Adicionar matérias →</button></div>`
+      return
+    }
+    container.innerHTML = subjects.map(s => {
+      const d = getSubjectData(s.id)
+      return renderCalcSubject(s, d)
+    }).join('')
+  }
+
+  function renderCalcSubject(s, d) {
+    const target = d.target || 6
+    const mediaFinal = calcularMediaFinal(d.periods)
+    const mediaStr = mediaFinal !== null ? mediaFinal.toFixed(1) : null
+    const mediaClass = mediaFinal === null ? '' : mediaFinal >= target ? 'verde' : mediaFinal >= target*0.75 ? 'amarelo' : 'vermelho'
+    return `
+      <div class="calc-subject" id="calc-${s.id}" data-sid="${s.id}">
+        <div class="calc-header" onclick="toggleCalc('${s.id}')">
+          <div class="calc-dot" style="background:${s.color}"></div>
+          <div class="calc-name">${s.name}</div>
+          <div class="calc-media-badge ${mediaClass}">${mediaStr ? 'Final: '+mediaStr : '—'}</div>
+          <span style="color:#555;margin-left:.3rem;font-size:.75rem">▾</span>
+        </div>
+        <div class="calc-body" id="calc-body-${s.id}" style="display:none"></div>
+      </div>`
+  }
+
+  function toggleCalc(sid) {
+    const body = document.getElementById(`calc-body-${sid}`)
+    if (!body) return
+    if (body.style.display !== 'none') { body.style.display = 'none'; return }
+    body.style.display = 'block'
+    body.innerHTML = renderCalcBody(sid)
+  }
+
+  function renderCalcBody(sid) {
+    const d = getSubjectData(sid)
+    const target = d.target || 6
+    const mediaFinal = calcularMediaFinal(d.periods)
+    const piAtivo = Math.min(calcActivePeriod[sid] ?? 0, Math.max(0, d.periods.length - 1))
+
+    // ── Abas de período ──
+    let periodoHtml = ''
+    if (d.periods.length === 0) {
+      periodoHtml = `<div style="text-align:center;padding:.8rem 0">
+        <button class="btn btn-ghost btn-sm" onclick="addPeriodo('${sid}')">+ Adicionar Bimestre / Período</button>
+      </div>`
+    } else {
+      periodoHtml = `
+        <div class="calc-period-tabs" id="calc-tabs-${sid}">
+          ${renderPeriodoTabs(sid, piAtivo, d, target)}
+        </div>
+        <div class="calc-period-body" id="calc-pdbody-${sid}">
+          ${renderPeriodoBody(sid, piAtivo)}
+        </div>`
+    }
+
+    // ── Resultado e "quanto preciso tirar" ──
+    const needed = d.periods.length > 0 ? quantoPrecisoFinal(d.periods, target) : null
+    let needLine = ''
+    if (needed !== null) {
+      if (needed > 10) needLine = `<br>❌ Impossível atingir ${target} com as notas atuais`
+      else if (needed <= 0) needLine = `<br>✅ Aprovado mesmo zerando os bimestres restantes`
+      else {
+        const cls = needed <= target ? 'res-amarelo' : 'res-vermelho'
+        needLine = `<br>🎯 Precisa de <strong class="${cls}">${needed.toFixed(1)}</strong> nos bimestres restantes`
+      }
+    }
+
+    let resultHtml = ''
+    if (d.periods.length > 0) {
+      if (mediaFinal !== null) {
+        const cls = mediaFinal >= target ? 'res-verde' : mediaFinal >= target*0.75 ? 'res-amarelo' : 'res-vermelho'
+        const status = mediaFinal >= target ? '✅ Aprovado!' : mediaFinal >= target*0.75 ? '⚠️ Atenção' : '❌ Reprovado'
+        resultHtml = `<div class="calc-result" id="calc-result-${sid}">
+          📊 Média Final: <strong class="${cls}">${mediaFinal.toFixed(2)}</strong><span class="${cls}"> ${status}</span>${needLine}
+        </div>`
+      } else {
+        resultHtml = `<div class="calc-result" id="calc-result-${sid}" style="color:var(--muted)">
+          ✏️ Some notas para calcular a média${needLine}
+        </div>`
+      }
+    }
+
+    const copyBtn = d.periods.length > 0
+      ? `<button class="btn btn-ghost btn-sm" style="font-size:.75rem;padding:.2rem .55rem"
+           onclick="mostrarCopiaModelo('${sid}')">📋 Copiar modelo</button>` : ''
+    const undoBtn = `<button class="btn btn-ghost btn-sm" style="font-size:.75rem;padding:.2rem .55rem;margin-left:auto"
+           onclick="undo('${sid}')" title="Desfazer última ação (Ctrl+Z)">↩ Desfazer</button>`
+
+    return `
+      ${periodoHtml}
+      ${resultHtml}
+      <div class="calc-target-row">
+        🎯 Meta:
+        <input class="calc-inp-sm" type="number" min="0" max="10" step="0.5"
+               value="${target}" onchange="updateTarget('${sid}',this.value)">
+        ${copyBtn}
+        ${undoBtn}
+      </div>`
+  }
+
+  function renderPeriodoTabs(sid, piAtivo, d, target) {
+    return d.periods.map((p, pi) => {
+      const avg = calcularMedia(p.assessments||[])
+      const avgStr = avg !== null ? avg.toFixed(1) : '—'
+      const colorCls = avg === null ? '' : avg >= target ? 'verde' : avg >= target*0.75 ? 'amarelo' : 'vermelho'
+      const isActive = pi === piAtivo
+      // Aba ativa: nome vira input editável
+      const nameHtml = isActive
+        ? `<input class="calc-tab-name-inp" value="${escHtml(p.name)}"
+             size="${Math.max(2, p.name.length)}"
+             onclick="event.stopPropagation()"
+             onkeydown="if(event.key==='Enter')this.blur()"
+             onchange="renamePeriodo('${sid}',${pi},this.value)">`
+        : escHtml(p.name)
+      return `<button class="calc-period-tab ${isActive ? 'active' : colorCls}"
+        onclick="switchPeriodo('${sid}',${pi})">
+        ${nameHtml}<span class="calc-tab-avg"> ${avgStr}</span>
+        ${d.periods.length > 1 ? `<span onclick="event.stopPropagation();removePeriodo('${sid}',${pi})"
+          title="Remover período" style="margin-left:.15rem;opacity:.4;font-size:.65rem;line-height:1">✕</span>` : ''}
+      </button>`
+    }).join('') +
+    `<button class="calc-period-tab" onclick="addPeriodo('${sid}')"
+      style="border-style:dashed;padding:.26rem .45rem" title="Novo período">+</button>
+     <button class="calc-period-tab" onclick="duplicarPeriodo('${sid}',${piAtivo})"
+      style="border-style:dashed;padding:.26rem .45rem;font-size:.72rem" title="Duplicar período atual">⎘</button>`
+  }
+
+  function renderPeriodoBody(sid, pi) {
+    const d = getSubjectData(sid)
+    const p = d.periods[pi]
+    if (!p) return ''
+    const rows = (p.assessments||[]).map((a, i) => `
+      <div class="calc-row">
+        <input class="calc-inp-name" value="${escHtml(String(a.name))}" placeholder="Ex: Prova 1, Trabalho"
+               onchange="updateAssessment('${sid}',${pi},${i},'name',this.value)">
+        <input class="calc-inp-sm" type="number" min="0" max="10" step="0.1"
+               value="${a.grade !== null && a.grade !== undefined ? a.grade : ''}"
+               placeholder="Nota" onchange="updateAssessment('${sid}',${pi},${i},'grade',this.value)">
+        <span style="color:var(--muted);font-size:.75rem">×</span>
+        <input class="calc-inp-sm" type="number" min="0.1" max="10" step="0.5"
+               value="${a.weight||1}" title="Peso"
+               onchange="updateAssessment('${sid}',${pi},${i},'weight',this.value)">
+        <button class="btn-delete" onclick="removeAssessment('${sid}',${pi},${i})">✕</button>
+      </div>`).join('')
+    return `
+      <div class="calc-col-labels" style="margin-top:.4rem">
+        <span style="flex:1">Prova / Trabalho</span>
+        <span style="width:64px">Nota</span>
+        <span style="width:10px"></span>
+        <span style="width:64px">Peso</span>
+        <span style="width:32px"></span>
+      </div>
+      ${rows || '<p style="font-size:.82rem;color:var(--muted);margin:.2rem 0 .4rem">Nenhuma prova adicionada.</p>'}
+      <button class="btn btn-ghost btn-sm" onclick="addAssessment('${sid}',${pi})" style="margin-bottom:.4rem">
+        + Prova / Trabalho
+      </button>`
+  }
+
+  function switchPeriodo(sid, pi) {
+    const d = getSubjectData(sid)
+    if (pi < 0 || pi >= d.periods.length) return
+    calcActivePeriod[sid] = pi
+    refreshCalcBody(sid)
+  }
+
+  function addPeriodo(sid) {
+    const d = getSubjectData(sid)
+    const n = d.periods.length + 1
+    d.periods.push({ name: `P${n}`, weight: 1, assessments: [] })
+    calcActivePeriod[sid] = d.periods.length - 1
+    saveCalcData()
+    refreshCalcBody(sid)
+  }
+
+  function removePeriodo(sid, pi) {
+    const d = getSubjectData(sid)
+    if (d.periods.length <= 1) { notify('Precisa de pelo menos um período!'); return }
+    pushUndo(sid)
+    d.periods.splice(pi, 1)
+    const cur = calcActivePeriod[sid] ?? 0
+    calcActivePeriod[sid] = Math.min(cur, d.periods.length - 1)
+    saveCalcData()
+    refreshCalcBody(sid)
+  }
+
+  function renamePeriodo(sid, pi, novoNome) {
+    const d = getSubjectData(sid)
+    if (!d.periods[pi]) return
+    const nome = novoNome.trim() || `P${pi + 1}`
+    d.periods[pi].name = nome
+    saveCalcData()
+    refreshPeriodoTabs(sid)
+  }
+
+  function duplicarPeriodo(sid, pi) {
+    const d = getSubjectData(sid)
+    if (!d.periods[pi]) return
+    const orig = d.periods[pi]
+    const copia = {
+      name: orig.name + ' (cópia)',
+      weight: orig.weight,
+      assessments: orig.assessments.map(a => ({ name: a.name, weight: a.weight, grade: null }))
+    }
+    d.periods.splice(pi + 1, 0, copia)
+    calcActivePeriod[sid] = pi + 1
+    saveCalcData()
+    refreshCalcBody(sid)
+    notify('Período duplicado (notas limpas)')
+  }
+
+  // ── UNDO ────────────────────────────────────────────────────────────────
+  const undoStack = {}   // { [sid]: [snapshot, snapshot, ...] }  max 20 por matéria
+
+  function pushUndo(sid) {
+    if (!undoStack[sid]) undoStack[sid] = []
+    const d = getSubjectData(sid)
+    undoStack[sid].push(JSON.stringify(d))
+    if (undoStack[sid].length > 20) undoStack[sid].shift()
+  }
+
+  function undo(sid) {
+    if (!undoStack[sid] || !undoStack[sid].length) { notify('Nada para desfazer'); return }
+    const snap = JSON.parse(undoStack[sid].pop())
+    const calcData = JSON.parse(localStorage.getItem(`cora_calc_${currentUser.id}`) || '{}')
+    calcData[sid] = snap
+    localStorage.setItem(`cora_calc_${currentUser.id}`, JSON.stringify(calcData))
+    if (calcActivePeriod[sid] >= snap.periods.length) calcActivePeriod[sid] = snap.periods.length - 1
+    refreshCalcBody(sid)
+    notify('Ação desfeita')
+  }
+
+  // Ctrl+Z / Cmd+Z global — só age se cursor estiver dentro de um calc-subject
+  document.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      const el = document.activeElement
+      const calcEl = el ? el.closest('.calc-subject') : null
+      if (!calcEl) return   // só dentro de uma calculadora
+      e.preventDefault()
+      const sid = calcEl.dataset.sid
+      if (sid) undo(sid)
+    }
+  })
+
+  function addAssessment(sid, pi) {
+    const d = getSubjectData(sid)
+    if (!d.periods[pi]) return
+    const n = d.periods[pi].assessments.length + 1
+    d.periods[pi].assessments.push({ name: `Prova ${n}`, weight: 1, grade: null })
+    saveCalcData()
+    refreshPeriodoBody(sid, pi)
+    refreshCalcResult(sid)
+    refreshPeriodoTabs(sid)
+    refreshCalcHeader(sid)
+  }
+
+  function removeAssessment(sid, pi, idx) {
+    const d = getSubjectData(sid)
+    if (!d.periods[pi]) return
+    pushUndo(sid)
+    d.periods[pi].assessments.splice(idx, 1)
+    saveCalcData()
+    refreshPeriodoBody(sid, pi)
+    refreshCalcResult(sid)
+    refreshPeriodoTabs(sid)
+    refreshCalcHeader(sid)
+  }
+
+  function updateAssessment(sid, pi, idx, field, value) {
+    const d = getSubjectData(sid)
+    if (!d.periods[pi]) return
+    const a = d.periods[pi].assessments[idx]
+    if (field === 'grade') a.grade = value === '' ? null : parseFloat(value)
+    else if (field === 'weight') a.weight = parseFloat(value) || 1
+    else a[field] = value
+    saveCalcData()
+    refreshPeriodoTabs(sid)
+    refreshCalcResult(sid)
+    refreshCalcHeader(sid)
+  }
+
+  function updateTarget(sid, value) {
+    const d = getSubjectData(sid)
+    d.target = parseFloat(value) || 6
+    saveCalcData()
+    refreshCalcBody(sid)
+  }
+
+  function refreshCalcBody(sid) {
+    const body = document.getElementById(`calc-body-${sid}`)
+    if (body && body.style.display !== 'none') body.innerHTML = renderCalcBody(sid)
+    refreshCalcHeader(sid)
+  }
+
+  function refreshPeriodoBody(sid, pi) {
+    const piAtivo = calcActivePeriod[sid] ?? 0
+    if (pi !== piAtivo) return
+    const body = document.getElementById(`calc-pdbody-${sid}`)
+    if (body) body.innerHTML = renderPeriodoBody(sid, pi)
+  }
+
+  function refreshPeriodoTabs(sid) {
+    const d = getSubjectData(sid)
+    const target = d.target || 6
+    const piAtivo = calcActivePeriod[sid] ?? 0
+    const tabsEl = document.getElementById(`calc-tabs-${sid}`)
+    if (tabsEl) tabsEl.innerHTML = renderPeriodoTabs(sid, piAtivo, d, target)
+  }
+
+  function refreshCalcResult(sid) {
+    const d = getSubjectData(sid)
+    const target = d.target || 6
+    const mediaFinal = calcularMediaFinal(d.periods)
+    const needed = quantoPrecisoFinal(d.periods, target)
+    const el = document.getElementById(`calc-result-${sid}`)
+    if (!el) return
+    let needLine = ''
+    if (needed !== null) {
+      if (needed > 10) needLine = `<br>❌ Impossível atingir ${target} com as notas atuais`
+      else if (needed <= 0) needLine = `<br>✅ Aprovado mesmo zerando os bimestres restantes`
+      else {
+        const cls = needed <= target ? 'res-amarelo' : 'res-vermelho'
+        needLine = `<br>🎯 Precisa de <strong class="${cls}">${needed.toFixed(1)}</strong> nos bimestres restantes`
+      }
+    }
+    if (mediaFinal !== null) {
+      const cls = mediaFinal >= target ? 'res-verde' : mediaFinal >= target*0.75 ? 'res-amarelo' : 'res-vermelho'
+      const status = mediaFinal >= target ? '✅ Aprovado!' : mediaFinal >= target*0.75 ? '⚠️ Atenção' : '❌ Reprovado'
+      el.innerHTML = `📊 Média Final: <strong class="${cls}">${mediaFinal.toFixed(2)}</strong><span class="${cls}"> ${status}</span>${needLine}`
+      el.style.color = ''
+    } else {
+      el.innerHTML = `✏️ Some notas para calcular${needLine}`
+      el.style.color = 'var(--muted)'
+    }
+  }
+
+  function refreshCalcHeader(sid) {
+    const d = getSubjectData(sid)
+    const target = d.target || 6
+    const mediaFinal = calcularMediaFinal(d.periods)
+    const badge = document.querySelector(`#calc-${sid} .calc-media-badge`)
+    if (badge) {
+      const cls = mediaFinal === null ? '' : mediaFinal >= target ? 'verde' : mediaFinal >= target*0.75 ? 'amarelo' : 'vermelho'
+      badge.className = `calc-media-badge ${cls}`
+      badge.textContent = mediaFinal !== null ? 'Final: '+mediaFinal.toFixed(1) : '—'
+    }
+  }
+
+  // ── TIMER / POMODORO ─────────────────────────────────────────
+  let timerInterval = null, timerRunning = false
+  let timerMode = 'pomodoro', pomodoroPhase = 'work'
+  let timerSeconds = 25 * 60, timerCountUp = 0
+
+  function toggleTimerPanel() {
+    const p = document.getElementById('timer-panel')
+    p.style.display = p.style.display === 'none' ? 'block' : 'none'
+  }
+
+  function setTimerMode(mode) {
+    timerMode = mode
+    document.getElementById('tbtn-pomodoro').classList.toggle('active', mode === 'pomodoro')
+    document.getElementById('tbtn-livre').classList.toggle('active', mode === 'livre')
+    document.getElementById('timer-settings').style.display = mode === 'pomodoro' ? 'flex' : 'none'
+    document.getElementById('timer-ring').style.display = mode === 'pomodoro' ? '' : 'none'
+    resetTimer()
+  }
+
+  function getPomoDur(type) {
+    const el = document.getElementById(type === 'work' ? 'pomo-work' : 'pomo-break')
+    return (el ? parseInt(el.value) || (type === 'work' ? 25 : 5) : (type === 'work' ? 25 : 5)) * 60
+  }
+
+  function startPauseTimer() {
+    timerRunning ? pauseTimer() : startTimer()
+  }
+
+  function startTimer() {
+    if (timerMode === 'pomodoro' && timerSeconds <= 0) { pomodoroPhase = 'work'; timerSeconds = getPomoDur('work') }
+    timerRunning = true
+    document.getElementById('timer-start-btn').textContent = '⏸ Pausar'
+    document.getElementById('timer-bubble').classList.add('running')
+    timerInterval = setInterval(tickTimer, 1000)
+  }
+
+  function pauseTimer() {
+    timerRunning = false; clearInterval(timerInterval)
+    document.getElementById('timer-start-btn').textContent = '▶ Continuar'
+    document.getElementById('timer-bubble').classList.remove('running')
+  }
+
+  function resetTimer() {
+    pauseTimer()
+    pomodoroPhase = 'work'
+    timerSeconds = timerMode === 'pomodoro' ? getPomoDur('work') : 0
+    timerCountUp = 0
+    document.getElementById('timer-start-btn').textContent = '▶ Iniciar'
+    const lbl = document.getElementById('timer-phase-lbl')
+    if (lbl) lbl.textContent = 'FOCO'
+    updateTimerDisplay()
+  }
+
+  function tickTimer() {
+    if (timerMode === 'pomodoro') {
+      timerSeconds--
+      if (timerSeconds <= 0) {
+        if (pomodoroPhase === 'work') {
+          pomodoroPhase = 'break'; timerSeconds = getPomoDur('break')
+          document.getElementById('timer-phase-lbl').textContent = 'PAUSA'
+          playBeep(); notify('🍅 Pomodoro concluído! Hora da pausa.')
+        } else {
+          pomodoroPhase = 'work'; timerSeconds = getPomoDur('work')
+          document.getElementById('timer-phase-lbl').textContent = 'FOCO'
+          playBeep(); notify('⚡ Pausa finalizada! Bora focar.')
+        }
+      }
+    } else { timerCountUp++ }
+    updateTimerDisplay()
+  }
+
+  function updateTimerDisplay() {
+    const secs = timerMode === 'pomodoro' ? timerSeconds : timerCountUp
+    const m = Math.floor(secs / 60).toString().padStart(2, '0')
+    const s = (secs % 60).toString().padStart(2, '0')
+    const str = `${m}:${s}`
+    document.getElementById('timer-display').textContent = str
+    const big = document.getElementById('timer-big'); if (big) big.textContent = str
+
+    const ring = document.getElementById('timer-ring')
+    if (ring && timerMode === 'pomodoro') {
+      const total = getPomoDur(pomodoroPhase)
+      const progress = Math.max(0, timerSeconds / total)
+      ring.style.strokeDashoffset = 264 * (1 - progress)
+      ring.style.stroke = pomodoroPhase === 'work' ? 'var(--coral)' : 'var(--green)'
+    }
+  }
+
+  function playBeep() {
+    try {
+      const ctx = new AudioContext()
+      ;[0, 180, 360].forEach((delay, i) => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain()
+        osc.connect(gain); gain.connect(ctx.destination)
+        osc.frequency.value = i === 1 ? 660 : 880
+        gain.gain.setValueAtTime(0.18, ctx.currentTime + delay/1000)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay/1000 + 0.3)
+        osc.start(ctx.currentTime + delay/1000)
+        osc.stop(ctx.currentTime + delay/1000 + 0.35)
+      })
+    } catch(e) {}
+  }
+
+  // ── ROTINAS DIÁRIAS ───────────────────────────────────────────
+  function getRotinas() {
+    return JSON.parse(localStorage.getItem(`cora_rotinas_${currentUser.id}`) || '[]')
+  }
+  function saveRotinas(r) {
+    localStorage.setItem(`cora_rotinas_${currentUser.id}`, JSON.stringify(r))
+  }
+  function getRotinasDone(date) {
+    return JSON.parse(localStorage.getItem(`cora_rdone_${currentUser.id}_${date}`) || '[]')
+  }
+  function saveRotinasDone(date, done) {
+    localStorage.setItem(`cora_rdone_${currentUser.id}_${date}`, JSON.stringify(done))
+  }
+
+  function renderRotinas() {
+    const el = document.getElementById('rotinas-lista'); if (!el) return
+    const rotinas = getRotinas()
+    const date = new Date().toISOString().split('T')[0]
+    const done = getRotinasDone(date)
+    if (!rotinas.length) {
+      el.innerHTML = `<p style="font-size:.8rem;color:var(--muted);padding:.3rem 0">
+        Adicione tarefas que se repetem todo dia (ex: Revisar anotações, Ler 20 min).</p>`
+      return
+    }
+    el.innerHTML = rotinas.map(r => {
+      const ok = done.includes(r.id)
+      return `<div class="rotina-rec" onclick="toggleRotina('${r.id}')">
+        <div class="rotina-rec-cb ${ok ? 'done' : ''}">${ok ? '✓' : ''}</div>
+        <span class="rotina-rec-label ${ok ? 'done' : ''}">${r.text}</span>
+        <button class="btn-delete" onclick="event.stopPropagation();removerRotina('${r.id}')">✕</button>
+      </div>`
+    }).join('')
+  }
+
+  function toggleRotina(id) {
+    const date = new Date().toISOString().split('T')[0]
+    const done = getRotinasDone(date)
+    const idx = done.indexOf(id)
+    if (idx >= 0) done.splice(idx, 1); else done.push(id)
+    saveRotinasDone(date, done); renderRotinas()
+  }
+
+  function addRotina() {
+    const inp = document.getElementById('rotina-inp')
+    const text = inp.value.trim(); if (!text) return
+    const rotinas = getRotinas()
+    rotinas.push({ id: Date.now().toString(), text })
+    saveRotinas(rotinas); inp.value = ''; renderRotinas()
+  }
+
+  function removerRotina(id) {
+    saveRotinas(getRotinas().filter(r => r.id !== id)); renderRotinas()
+  }
+
+  // ── PERFIL ────────────────────────────────────────────────────
+  const PERFIL_EMOJIS = ['📚','🎯','🔥','⚡','🧠','😎','🦁','🐺','🚀','💡','🌟','🏆','💪','🎓','🦅','🐉','👑','⚔️','🎵','🌊']
+  let perfilEmojiSel = '📚'
+
+  function abrirPerfil() {
+    const p = JSON.parse(localStorage.getItem(`cora_perfil_${currentUser.id}`) || '{}')
+    const rawName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]
+    perfilEmojiSel = p.emoji || '📚'
+    temaAtual = p.tema || 'coral'
+    document.getElementById('profile-modal').style.display = 'block'
+    document.getElementById('profile-name-inp').value = p.nome || rawName
+    document.getElementById('profile-goal-inp').value = p.goal || 4
+    document.getElementById('profile-avatar-preview').textContent = perfilEmojiSel
+    document.getElementById('profile-emoji-grid').innerHTML = PERFIL_EMOJIS.map(e =>
+      `<div class="emoji-opt ${e === perfilEmojiSel ? 'sel' : ''}" onclick="selecionarEmoji('${e}',this)">${e}</div>`
+    ).join('')
+    renderTemasModal()
+  }
+
+  function fecharPerfil() { document.getElementById('profile-modal').style.display = 'none' }
+
+  function selecionarEmoji(e, el) {
+    document.querySelectorAll('.emoji-opt').forEach(x => x.classList.remove('sel'))
+    el.classList.add('sel'); perfilEmojiSel = e
+    document.getElementById('profile-avatar-preview').textContent = e
+  }
+
+  function salvarPerfil() {
+    const nome = document.getElementById('profile-name-inp').value.trim() || 'Estudante'
+    const goal = parseFloat(document.getElementById('profile-goal-inp').value) || 4
+    localStorage.setItem(`cora_perfil_${currentUser.id}`, JSON.stringify({ nome, emoji: perfilEmojiSel, goal, tema: temaAtual }))
+    document.getElementById('sidebar-name').textContent = nome
+    document.getElementById('sidebar-avatar').textContent = perfilEmojiSel
+    document.getElementById('hoje-nome').textContent = nome.split(' ')[0]
+    aplicarTema(temaAtual)
+    fecharPerfil(); notify('Perfil atualizado! ✓')
+  }
+
+  // ── BAIXAR FICHA DO DIA ───────────────────────────────────────
+  async function baixarFichaHoje() {
+    const perfil = JSON.parse(localStorage.getItem(`cora_perfil_${currentUser.id}`) || '{}')
+    const rawName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]
+    const nome = perfil.nome || rawName
+    const hoje = new Date()
+    const dataStr = hoje.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })
+    const diaCap = dataStr.charAt(0).toUpperCase() + dataStr.slice(1)
+    const dateKey = hoje.toISOString().split('T')[0]
+
+    notify('Gerando ficha...')
+    const dayOfWeek = hoje.getDay()
+    const [blocos, tarefas] = await Promise.all([
+      dbSelect('schedule', `select=*,subjects(name,color)&day_of_week=eq.${dayOfWeek}&order=start_time`),
+      dbSelect('daily_sessions', `select=*,subjects(name,color)&date=eq.${dateKey}&order=created_at`)
+    ])
+    const rotinas = getRotinas()
+    const rotinasDone = getRotinasDone(dateKey)
+
+    const schedRows = (Array.isArray(blocos) ? blocos : []).map(b => {
+      const nome2 = b.label || b.subjects?.name || '—'
+      const cor = b.color || b.subjects?.color || '#888'
+      return `<tr>
+        <td style="font-family:monospace;font-size:.83rem;white-space:nowrap;color:#555">${b.start_time.slice(0,5)} – ${b.end_time.slice(0,5)}</td>
+        <td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${cor};margin-right:6px;vertical-align:middle"></span>${nome2}</td>
+        <td style="color:#888;font-size:.8rem">${calcDur(b.start_time,b.end_time)}</td>
+        <td style="width:24px;text-align:center">☐</td></tr>`
+    }).join('') || '<tr><td colspan="4" style="color:#aaa;text-align:center;padding:1rem">Nenhuma atividade</td></tr>'
+
+    const taskRows = (Array.isArray(tarefas) ? tarefas : []).map(t =>
+      `<tr><td style="width:24px;text-align:center">${t.status==='done'?'☑':'☐'}</td>
+       <td>${t.study_goal}</td><td style="color:#888">${t.subjects?.name||'Livre'}</td></tr>`
+    ).join('') || '<tr><td colspan="3" style="color:#aaa;text-align:center;padding:.7rem">Nenhuma tarefa</td></tr>'
+
+    const rotinaRows = rotinas.map(r =>
+      `<tr><td style="width:24px;text-align:center">${rotinasDone.includes(r.id)?'☑':'☐'}</td><td>${r.text}</td></tr>`
+    ).join('')
+
+    const materias = [...new Set((Array.isArray(blocos) ? blocos : []).filter(b => b.subjects).map(b => b.subjects.name))]
+    const notasSec = materias.map(m => `
+      <div style="margin-bottom:1.4rem;break-inside:avoid">
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:.4rem;padding-bottom:.25rem;border-bottom:2px solid #1a1814">${m}</div>
+        ${[...Array(5)].map(() => '<div style="border-bottom:1px solid #ddd;height:22px;margin-bottom:4px"></div>').join('')}
+      </div>`).join('')
+
+    const html = `<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8">
+<title>Ficha — ${diaCap}</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;padding:1.5cm 2cm;color:#1a1814;font-size:.88rem}
+h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;color:#888;
+   margin:1.1rem 0 .45rem;padding-top:.8rem;border-top:1px solid #e2ddd5}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:.7rem;color:#888;text-transform:uppercase;letter-spacing:.06em;
+   padding:.25rem .4rem;border-bottom:1px solid #e2ddd5}
+td{padding:.35rem .4rem;border-bottom:1px solid #f0ede6;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+.ficha-toolbar{position:fixed;bottom:1.2rem;right:1.2rem;display:flex;gap:.5rem;z-index:100}
+.ficha-btn{font-family:Arial,sans-serif;font-size:.82rem;font-weight:700;padding:.45rem 1rem;
+  border-radius:8px;border:none;cursor:pointer;transition:opacity .15s}
+.ficha-btn:hover{opacity:.85}
+.ficha-btn-print{background:#1a1814;color:#fff}
+.ficha-btn-close{background:#e2ddd5;color:#1a1814}
+@media print{.ficha-toolbar{display:none}body{padding:1cm 1.5cm}@page{margin:.8cm}}
+</style></head><body>
+<div class="ficha-toolbar">
+  <button class="ficha-btn ficha-btn-close" onclick="window.close()">✕ Fechar</button>
+  <button class="ficha-btn ficha-btn-print" onclick="window.print()">🖨 Imprimir</button>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem;padding-bottom:.8rem;border-bottom:2px solid #1a1814">
+  <div><div style="font-size:1.5rem;font-weight:900;letter-spacing:-.02em">Cora</div>
+       <div style="font-size:.75rem;color:#888">Ficha de Estudo</div></div>
+  <div style="text-align:right"><div style="font-weight:700">${nome}</div>
+       <div style="font-size:.8rem;color:#888">${diaCap}</div></div>
+</div>
+<h2>📅 Cronograma de Hoje</h2>
+<table><thead><tr><th>Horário</th><th>Atividade</th><th>Duração</th><th>✓</th></tr></thead>
+<tbody>${schedRows}</tbody></table>
+<h2>✅ Tarefas do Dia</h2>
+<table><thead><tr><th> </th><th>Tarefa</th><th>Matéria</th></tr></thead>
+<tbody>${taskRows}</tbody></table>
+${rotinas.length ? `<h2>🔁 Rotinas</h2><table><tbody>${rotinaRows}</tbody></table>` : ''}
+${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
+<h2>⏱ Log de Estudo</h2>
+<table><thead><tr><th>Início</th><th>Fim</th><th>Matéria</th><th>O que estudou / observações</th></tr></thead>
+<tbody>${[...Array(5)].map(()=>'<tr><td style="height:26px"></td><td></td><td></td><td></td></tr>').join('')}</tbody></table>
+</body></html>`
+
+    const win = window.open('', '_blank')
+    if (!win) { notify('Permita pop-ups para baixar a ficha!'); return }
+    win.document.write(html); win.document.close()
+  }
+
+  // ── COPIAR MODELO DE AVALIAÇÃO ───────────────────────────────
+  function mostrarCopiaModelo(fromSid) {
+    const d = calcData[fromSid]
+    if (!d || !d.periods || d.periods.length === 0) {
+      notify('Adicione períodos e provas primeiro!'); return
+    }
+    const fromS = subjects.find(s => s.id === fromSid)
+    const outros = subjects.filter(s => s.id !== fromSid)
+    if (!outros.length) { notify('Sem outras matérias para copiar.'); return }
+
+    const estrutura = d.periods.map(p =>
+      `${p.name}: ${(p.assessments||[]).map(a => `${a.name} ×${a.weight||1}`).join(', ') || 'sem provas'}`
+    ).join(' | ')
+
+    document.getElementById('import-modal').style.display = 'block'
+    document.getElementById('import-modal-content').innerHTML = `
+      <div class="modal-header">
+        <span>📋 Copiar modelo de avaliação</span>
+        <button class="modal-close" onclick="fecharImportModal()">✕</button>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+        padding:.6rem .8rem;margin-bottom:.9rem;font-size:.8rem;color:var(--ink2)">
+        <strong style="color:var(--ink)">${fromS?.name || ''}</strong><br>
+        <span style="color:var(--muted);font-size:.74rem">${estrutura}</span>
+      </div>
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:.7rem">
+        Selecione as matérias que vão receber a mesma estrutura:
+      </p>
+      <div style="display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem;max-height:42vh;overflow-y:auto;padding-right:.2rem">
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;
+          border:1px solid var(--border);border-radius:7px;cursor:pointer;font-size:.84rem;font-weight:600;color:var(--ink2)">
+          <input type="checkbox" id="copy-all" style="accent-color:var(--coral)"
+            onchange="document.querySelectorAll('.copy-cb').forEach(c=>c.checked=this.checked)">
+          Selecionar todas
+        </label>
+        ${outros.map(s => `
+          <label style="display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;
+            border:1px solid var(--border);border-radius:7px;cursor:pointer;
+            background:var(--surface)" onmouseover="this.style.background='var(--surface2)'"
+            onmouseout="this.style.background='var(--surface)'">
+            <input type="checkbox" class="copy-cb" value="${s.id}" style="accent-color:var(--coral)">
+            <div style="width:9px;height:9px;border-radius:50%;background:${s.color};flex-shrink:0"></div>
+            <span style="font-weight:600;font-size:.87rem;color:var(--ink)">${s.name}</span>
+          </label>`).join('')}
+      </div>
+      <p style="font-size:.74rem;color:var(--muted);margin-bottom:.8rem">
+        ℹ️ As notas já digitadas nessas matérias serão apagadas. Só a estrutura é copiada.
+      </p>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn btn-ghost btn-sm" onclick="fecharImportModal()">Cancelar</button>
+        <button class="btn btn-coral" onclick="confirmarCopia('${fromSid}')">Copiar estrutura →</button>
+      </div>`
+  }
+
+  function confirmarCopia(fromSid) {
+    const d = calcData[fromSid]
+    if (!d) return
+    const selecionadas = Array.from(document.querySelectorAll('.copy-cb'))
+      .filter(c => c.checked).map(c => c.value)
+    if (!selecionadas.length) { notify('Selecione pelo menos uma matéria!'); return }
+
+    selecionadas.forEach(toSid => {
+      const existente = calcData[toSid] || {}
+      calcData[toSid] = {
+        periods: d.periods.map(p => ({
+          name: p.name,
+          weight: p.weight || 1,
+          assessments: (p.assessments||[]).map(a => ({ name: a.name, weight: a.weight || 1, grade: null }))
+        })),
+        target: d.target || existente.target || 6
+      }
+      calcActivePeriod[toSid] = 0
+    })
+    saveCalcData()
+    fecharImportModal()
+    selecionadas.forEach(sid => {
+      const body = document.getElementById(`calc-body-${sid}`)
+      if (body && body.style.display !== 'none') body.innerHTML = renderCalcBody(sid)
+      refreshCalcHeader(sid)
+    })
+    notify(`✓ Estrutura copiada para ${selecionadas.length} matéria${selecionadas.length > 1 ? 's' : ''}!`)
+  }
+
+  // ── TEMAS ─────────────────────────────────────────────────────
+  const TEMAS = [
+    { id:'coral',  label:'Coral',   acento:'#e8420a', bg:'#f7f5f0', soft:'rgba(232,66,10,.1)' },
+    { id:'azul',   label:'Azul',    acento:'#2563EB', bg:'#f0f4ff', soft:'rgba(37,99,235,.1)' },
+    { id:'verde',  label:'Verde',   acento:'#16A34A', bg:'#f0f5f1', soft:'rgba(22,163,74,.1)' },
+    { id:'roxo',   label:'Roxo',    acento:'#7C3AED', bg:'#f4f0ff', soft:'rgba(124,58,237,.1)' },
+    { id:'amber',  label:'Âmbar',   acento:'#c97000', bg:'#fdf7f0', soft:'rgba(201,112,0,.1)'  },
+  ]
+  let temaAtual = 'coral'
+
+  function aplicarTema(id) {
+    const t = TEMAS.find(x => x.id === id) || TEMAS[0]
+    temaAtual = t.id
+    const r = document.documentElement
+    r.style.setProperty('--coral',      t.acento)
+    r.style.setProperty('--bg',         t.bg)
+    r.style.setProperty('--coral-soft', t.soft)
+  }
+
+  function renderTemasModal() {
+    const el = document.getElementById('profile-temas')
+    if (!el) return
+    const p = JSON.parse(localStorage.getItem(`cora_perfil_${currentUser?.id}`) || '{}')
+    const atual = p.tema || 'coral'
+    el.innerHTML = TEMAS.map(t =>
+      `<div class="tema-opt ${t.id === atual ? 'sel' : ''}"
+            style="background:${t.acento}"
+            title="${t.label}"
+            onclick="selecionarTema('${t.id}',this)"></div>`
+    ).join('') + `<span style="font-size:.75rem;color:var(--muted);margin-left:.3rem">${TEMAS.find(x=>x.id===atual)?.label||'Coral'}</span>`
+  }
+
+  function selecionarTema(id, el) {
+    document.querySelectorAll('.tema-opt').forEach(x => x.classList.remove('sel'))
+    el.classList.add('sel')
+    temaAtual = id
+    aplicarTema(id)
+    // update label
+    const span = el.parentElement.querySelector('span')
+    if (span) span.textContent = TEMAS.find(x=>x.id===id)?.label || id
+  }
+
+  // ── Notificação ──────────────────────────────────────────────
+  let notifTimer = null
+  function notify(msg) {
+    const el = document.getElementById('notif')
+    el.textContent = msg
+    el.classList.add('show')
+    if (notifTimer) clearTimeout(notifTimer)
+    notifTimer = setTimeout(() => el.classList.remove('show'), 2500)
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+  }
+
+  // ── PAINEL DE FÓRMULAS (slide-in, para uso futuro) ────────────
+  let fpSubjects = [], fpTopics = [], fpAllFormulas = [], fpFormulas = []
+  let fpSelSubject = null
+
+  async function dbSelectPublic(table, params = '') {
+    const res = await fetch(`${API}/${table}?${params}`, { headers: { 'apikey': SUPABASE_KEY } })
+    if (!res.ok) return []
+    return await res.json()
+  }
+
+  async function loadFormulaData() {
+    if (fpSubjects.length) return
+    ;[fpSubjects, fpTopics, fpAllFormulas] = await Promise.all([
+      dbSelectPublic('formula_subjects', 'order=name'),
+      dbSelectPublic('formula_topics', 'order=order_idx'),
+      dbSelectPublic('formula_library', 'order=order_idx')
+    ])
+  }
+
+  async function abrirPainelFormulas() {
+    await loadFormulaData()
+    renderSubjectTabs()
+    if (fpSubjects.length && !fpSelSubject) selecionarSubject(fpSubjects[0].id)
+    else filtrarFormulas()
+    document.getElementById('formula-panel').classList.add('open')
+    document.getElementById('formula-panel-overlay').classList.add('open')
+    document.getElementById('fp-search').focus()
+  }
+
+  function fecharPainelFormulas() {
+    document.getElementById('formula-panel').classList.remove('open')
+    document.getElementById('formula-panel-overlay').classList.remove('open')
+  }
+
+  function renderSubjectTabs() {
+    document.getElementById('fp-subject-tabs').innerHTML = fpSubjects.map(s =>
+      `<button class="fp-tab ${fpSelSubject === s.id ? 'active' : ''}" onclick="selecionarSubject('${s.id}')">${s.icon} ${s.name}</button>`
+    ).join('')
+  }
+
+  function selecionarSubject(sid) {
+    fpSelSubject = sid
+    renderSubjectTabs()
+    const topics = fpTopics.filter(t => t.subject_id === sid)
+    document.getElementById('fp-topic-select').innerHTML =
+      `<option value="">Todos os tópicos</option>` +
+      topics.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+    filtrarFormulas()
+  }
+
+  function filtrarFormulas() {
+    const q = (document.getElementById('fp-search').value || '').toLowerCase().trim()
+    const tid = document.getElementById('fp-topic-select').value
+    fpFormulas = fpAllFormulas.filter(f => {
+      const topic = fpTopics.find(t => t.id === f.topic_id)
+      if (fpSelSubject && (!topic || topic.subject_id !== fpSelSubject)) return false
+      if (tid && f.topic_id !== tid) return false
+      if (q && !f.name.toLowerCase().includes(q) && !f.formula_text.toLowerCase().includes(q)) return false
+      return true
+    })
+    renderFormulaList()
+  }
+
+  function renderFormulaList() {
+    const el = document.getElementById('fp-formula-list')
+    if (!fpFormulas.length) {
+      el.innerHTML = '<p style="font-size:.8rem;color:var(--muted);padding:.4rem 0">Nenhuma fórmula encontrada.</p>'
+      return
+    }
+    el.innerHTML = fpFormulas.map(f => `
+      <div class="fp-formula-item" onclick="inserirFormula('${f.id}')">
+        <div class="fp-formula-name">${escHtml(f.name)}</div>
+        <div class="fp-formula-text">${escHtml(f.formula_text)}</div>
+        ${f.description ? `<div class="fp-formula-desc">${escHtml(f.description)}</div>` : ''}
+      </div>`).join('')
+  }
+
+  function inserirFormula(fid) {
+    const f = fpAllFormulas.find(x => x.id === fid)
+    if (!f) return
+    const textarea = document.getElementById('ficha-conteudo')
+    if (textarea) {
+      const ins = `$$${f.formula_latex}$$`
+      const start = textarea.selectionStart, end = textarea.selectionEnd
+      textarea.value = textarea.value.substring(0, start) + ins + textarea.value.substring(end)
+      textarea.selectionStart = textarea.selectionEnd = start + ins.length
+      textarea.focus()
+    }
+    fecharPainelFormulas()
+    notify(`${f.name} copiada! ✓`)
+  }
+
+  // ── PÁGINA DE FÓRMULAS ────────────────────────────────────────
+  let fpgSelSubject = null
+
+  async function loadFormulasPage() {
+    await loadFormulaData()
+    renderSubjectTabsPg()
+    if (fpSubjects.length && !fpgSelSubject) selecionarSubjectPg(fpSubjects[0].id)
+    else filtrarFormulasPg()
+  }
+
+  function renderSubjectTabsPg() {
+    const el = document.getElementById('pg-subject-tabs')
+    if (!el) return
+    el.innerHTML = fpSubjects.map(s =>
+      `<button class="fp-tab ${fpgSelSubject === s.id ? 'active' : ''}" onclick="selecionarSubjectPg('${s.id}')">${s.icon || ''} ${s.name}</button>`
+    ).join('')
+  }
+
+  function selecionarSubjectPg(sid) {
+    fpgSelSubject = sid
+    renderSubjectTabsPg()
+    const topics = fpTopics.filter(t => t.subject_id === sid)
+    const sel = document.getElementById('pg-topic-select')
+    if (sel) sel.innerHTML = '<option value="">Todos os tópicos</option>' +
+      topics.map(t => `<option value="${t.id}">${t.name}</option>`).join('')
+    filtrarFormulasPg()
+  }
+
+  function filtrarFormulasPg() {
+    const q = (document.getElementById('pg-search')?.value || '').toLowerCase().trim()
+    const tid = document.getElementById('pg-topic-select')?.value || ''
+    const formulas = fpAllFormulas.filter(f => {
+      const topic = fpTopics.find(t => t.id === f.topic_id)
+      if (fpgSelSubject && (!topic || topic.subject_id !== fpgSelSubject)) return false
+      if (tid && f.topic_id !== tid) return false
+      if (q && !f.name.toLowerCase().includes(q) && !(f.formula_text||'').toLowerCase().includes(q)) return false
+      return true
+    })
+    renderFormulaListPg(formulas)
+  }
+
+  function renderFormulaListPg(formulas) {
+    const el = document.getElementById('pg-formula-list')
+    if (!el) return
+    if (!formulas.length) {
+      el.innerHTML = '<p style="font-size:.8rem;color:var(--muted);padding:.4rem 0">Nenhuma fórmula encontrada.</p>'
+      return
+    }
+    el.innerHTML = formulas.map(f => `
+      <div class="fp-formula-item" onclick="verFormulaDetalhe('${f.id}')">
+        <div class="fp-formula-name">${escHtml(f.name)}</div>
+        <div class="fp-formula-text">${escHtml(f.formula_text)}</div>
+        ${f.description ? `<div class="fp-formula-desc">${escHtml(f.description)}</div>` : ''}
+      </div>`).join('')
+  }
+
+  function verFormulaDetalhe(fid) {
+    const f = fpAllFormulas.find(x => x.id === fid)
+    if (!f) return
+    const existing = document.getElementById('formula-detail-modal')
+    if (existing) existing.remove()
+    let latexHtml = ''
+    if (f.formula_latex && window.katex) {
+      try { latexHtml = katex.renderToString(f.formula_latex, { throwOnError: false, displayMode: true }) } catch(e) {}
+    }
+    const box = document.createElement('div')
+    box.id = 'formula-detail-modal'
+    box.style.cssText = 'position:fixed;inset:0;z-index:400;display:flex;align-items:center;justify-content:center'
+    box.innerHTML = `
+      <div class="modal-overlay" onclick="document.getElementById('formula-detail-modal').remove()"></div>
+      <div class="modal-box" style="max-width:460px;width:94%">
+        <div class="modal-header">
+          <span>⚗ ${escHtml(f.name)}</span>
+          <button class="modal-close" onclick="document.getElementById('formula-detail-modal').remove()">✕</button>
+        </div>
+        <div style="text-align:center;padding:.9rem 0 .6rem;font-size:1.05rem;overflow-x:auto">
+          ${latexHtml || `<code style="font-size:1rem;color:var(--ink)">${escHtml(f.formula_text)}</code>`}
+        </div>
+        ${f.description ? `<p style="font-size:.85rem;color:var(--ink2);line-height:1.65;margin-top:.4rem">${escHtml(f.description)}</p>` : ''}
+        ${f.variables ? `<div style="margin-top:.7rem;padding:.55rem .8rem;background:var(--surface2);border-radius:8px;font-size:.8rem;color:var(--muted);line-height:1.7">${escHtml(f.variables)}</div>` : ''}
+      </div>`
+    document.body.appendChild(box)
+  }
+</script>
+</body>
 </html>
