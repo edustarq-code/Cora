@@ -499,6 +499,7 @@ body {
 }
 
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
@@ -625,6 +626,34 @@ body {
     .tema-opt.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--ink)}
 
 
+    /* ── FICHAS ─────────────────────────────────────────── */
+    .fichas-layout{display:grid;grid-template-columns:1fr 300px;gap:1rem;align-items:start}
+    @media(max-width:820px){.fichas-layout{grid-template-columns:1fr}}
+    .fichas-canvas-wrap{position:relative;background:#2e2c28;border-radius:12px;overflow:hidden;
+      display:flex;align-items:flex-start;justify-content:center;min-height:300px;cursor:crosshair;
+      user-select:none;-webkit-user-select:none}
+    #fichas-canvas{max-width:100%;display:block}
+    .fichas-nav{display:flex;align-items:center;justify-content:center;gap:.7rem;padding:.4rem 0}
+    .fichas-timer-display{font-size:1.9rem;font-weight:700;color:var(--coral);
+      font-family:'Geist',monospace;letter-spacing:.04em;text-align:center}
+    .fichas-panel{display:flex;flex-direction:column;gap:.7rem}
+
+    /* ── CADERNO DE ERROS ────────────────────────────────── */
+    .erro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.9rem}
+    .erro-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;
+      background:var(--surface);transition:box-shadow .15s}
+    .erro-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.09)}
+    .erro-card-img{width:100%;max-height:220px;object-fit:contain;background:#f5f3ef;display:block;border-bottom:1px solid var(--border)}
+    .erro-card-body{padding:.75rem}
+    .erro-card-subject{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;
+      font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.35rem}
+    .erro-card-notes-inp{width:100%;background:transparent;border:none;border-bottom:1px solid transparent;
+      outline:none;font-size:.82rem;color:var(--ink);font-family:'Geist',sans-serif;
+      padding:.15rem 0;resize:none;line-height:1.55;box-sizing:border-box}
+    .erro-card-notes-inp:focus{border-bottom-color:var(--coral)}
+    .erro-card-meta{font-size:.73rem;color:var(--muted);display:flex;justify-content:space-between;
+      align-items:center;margin-top:.55rem}
+
     /* ── PAINEL DE FÓRMULAS ────────────────── */
     #formula-panel{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:95vw;
       background:var(--surface);border-left:1px solid var(--border);z-index:300;
@@ -705,6 +734,14 @@ body {
     </button>
     <button class="nav-item" onclick="goTo('formulas', this)">
       <span class="nav-icon">⚗</span> Fórmulas
+    </button>
+
+    <div class="sidebar-section">Exercícios</div>
+    <button class="nav-item" onclick="goTo('fichas', this)">
+      <span class="nav-icon">📄</span> Fichas
+    </button>
+    <button class="nav-item" onclick="goTo('caderno', this)">
+      <span class="nav-icon">📕</span> Caderno de Erros
     </button>
 
     <div class="sidebar-bottom">
@@ -870,6 +907,103 @@ body {
             <p style="font-size:.8rem;color:var(--muted)">Carregando fórmulas...</p>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- ── FICHAS ── -->
+    <div id="page-fichas" class="page">
+      <div class="page-content" style="max-width:100%">
+        <div class="ph" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <div class="ph-eyebrow">Exercícios</div>
+            <div class="ph-title">Fichas de Estudo</div>
+            <div class="ph-sub">Importe um PDF ou foto — cronometre cada questão e salve os erros.</div>
+          </div>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+            <select id="fichas-subject" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;color:var(--ink);font-size:.83rem;font-family:'Geist',sans-serif;outline:none;min-width:140px" onchange="">
+              <option value="">Matéria...</option>
+            </select>
+            <button class="btn btn-coral btn-sm" onclick="document.getElementById('fichas-file-input').click()">📄 Importar</button>
+            <input type="file" id="fichas-file-input" accept=".pdf,image/png,image/jpeg,image/webp" style="display:none" onchange="fichaFileSelected(event)">
+          </div>
+        </div>
+
+        <div id="fichas-empty" style="text-align:center;padding:3.5rem 1rem;color:var(--muted)">
+          <div style="font-size:3rem;margin-bottom:.8rem">📄</div>
+          <div style="font-weight:700;color:var(--ink2);margin-bottom:.35rem">Nenhuma ficha carregada</div>
+          <div style="font-size:.85rem">Clique em "Importar" para carregar um PDF ou foto de exercícios</div>
+        </div>
+
+        <div id="fichas-viewer" style="display:none">
+          <div class="fichas-layout">
+            <!-- Visualizador -->
+            <div>
+              <div class="fichas-canvas-wrap" id="fichas-canvas-wrap">
+                <canvas id="fichas-canvas"
+                  onmousedown="fichaMouseDown(event)"
+                  onmousemove="fichaMouseMove(event)"
+                  onmouseup="fichaMouseUp(event)"></canvas>
+                <div id="fichas-overlay" style="display:none;position:absolute;border:2.5px dashed var(--coral);background:rgba(232,66,10,.1);pointer-events:none;border-radius:3px"></div>
+              </div>
+              <div id="fichas-nav" class="fichas-nav" style="display:none">
+                <button class="btn btn-ghost btn-sm" onclick="fichaGotoPage(fichaCurrentPage-1)">‹ Anterior</button>
+                <span style="font-size:.84rem;color:var(--ink2)" id="fichas-page-label">Pág 1 / 1</span>
+                <button class="btn btn-ghost btn-sm" onclick="fichaGotoPage(fichaCurrentPage+1)">Próxima ›</button>
+              </div>
+            </div>
+            <!-- Painel lateral -->
+            <div class="fichas-panel">
+              <!-- Timer -->
+              <div class="card" style="padding:1rem;text-align:center">
+                <div style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">⏱ Tempo nesta questão</div>
+                <div class="fichas-timer-display" id="fichas-timer-display">00:00</div>
+                <div style="display:flex;gap:.4rem;justify-content:center;margin-top:.6rem">
+                  <button class="btn btn-coral btn-sm" id="fichas-timer-btn" onclick="fichaTimerToggle()" style="min-width:80px">▶ Iniciar</button>
+                  <button class="btn btn-ghost btn-sm" onclick="fichaTimerReset()" title="Reiniciar">↺</button>
+                </div>
+              </div>
+              <!-- Instruções -->
+              <div class="card" style="padding:.8rem;font-size:.82rem;color:var(--muted);line-height:1.7">
+                <div style="font-weight:700;color:var(--ink2);margin-bottom:.3rem">Como usar:</div>
+                🖱 <b>Arraste</b> sobre a questão para recortá-la<br>
+                📝 Escreva uma nota no bloco abaixo<br>
+                📕 Clique em <span style="color:var(--coral);font-weight:700">Salvar Erro</span> para guardar
+              </div>
+              <!-- Bloco de notas -->
+              <div class="card" style="padding:.85rem">
+                <div style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">📝 Bloco de notas</div>
+                <textarea id="fichas-notes" placeholder="O que errei? Como resolver corretamente..." style="width:100%;min-height:110px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;color:var(--ink);font-size:.83rem;font-family:'Geist',sans-serif;resize:vertical;outline:none;box-sizing:border-box;line-height:1.6;transition:border-color .15s" onfocus="this.style.borderColor='var(--coral)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+              </div>
+              <!-- Botões de salvar -->
+              <button id="fichas-save-crop-btn" class="btn btn-coral" onclick="fichaSalvarErro(false)" style="display:none;width:100%">📕 Salvar recorte no Caderno</button>
+              <button class="btn btn-ghost btn-sm" onclick="fichaSalvarErro(true)" style="width:100%;font-size:.8rem">Salvar página inteira no Caderno</button>
+              <!-- Nome da ficha -->
+              <div id="fichas-filename" style="font-size:.74rem;color:var(--muted);text-align:center;padding:.15rem 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CADERNO DE ERROS ── -->
+    <div id="page-caderno" class="page">
+      <div class="page-content">
+        <div class="ph" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
+          <div>
+            <div class="ph-eyebrow">Revisão</div>
+            <div class="ph-title">Caderno de Erros</div>
+            <div class="ph-sub">Questões erradas organizadas por matéria. Clique nas notas para editar.</div>
+          </div>
+        </div>
+        <div id="caderno-filters" style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem">
+          <button class="calc-period-tab active" onclick="cadernoFiltrar(null, this)">Todas</button>
+        </div>
+        <div id="caderno-empty" style="display:none;text-align:center;padding:3.5rem 1rem;color:var(--muted)">
+          <div style="font-size:3rem;margin-bottom:.8rem">📕</div>
+          <div style="font-weight:700;color:var(--ink2);margin-bottom:.35rem">Caderno vazio</div>
+          <div style="font-size:.85rem">Marque erros nas fichas para eles aparecerem aqui</div>
+        </div>
+        <div id="caderno-grid" class="erro-grid"></div>
       </div>
     </div>
 
@@ -1120,6 +1254,8 @@ body {
     if (pageId === 'cronograma') loadCronograma()
     if (pageId === 'materias') { loadCalcData(); loadMaterias() }
     if (pageId === 'formulas') loadFormulasPage()
+    if (pageId === 'fichas') fichaPageInit()
+    if (pageId === 'caderno') cadernoLoad()
   }
 
   // ── MATÉRIAS ─────────────────────────────────────────────────
@@ -2914,6 +3050,352 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
         ${f.variables ? `<div style="margin-top:.7rem;padding:.55rem .8rem;background:var(--surface2);border-radius:8px;font-size:.8rem;color:var(--muted);line-height:1.7">${escHtml(f.variables)}</div>` : ''}
       </div>`
     document.body.appendChild(box)
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  FICHAS DE ESTUDO
+  // ══════════════════════════════════════════════════════════
+  ;(function() {
+    // ── Estado ───────────────────────────────────────────────
+    let pdfDoc = null
+    let currentPage = 1
+    let totalPages = 0
+    let isImage = false
+    let currentFile = null
+
+    let timerRunning = false
+    let timerSec = 0
+    let timerIv = null
+
+    let selecting = false
+    let cropStart = null  // {cx, cy, sx, sy}  canvas + screen coords
+    let cropEnd   = null
+    let cropRect  = null  // {x,y,w,h} in canvas pixels
+
+    // Inicializa PDF.js worker
+    function initPdfJs() {
+      if (window.pdfjsLib) {
+        pdfjsLib.GlobalWorkerOptions.workerSrc =
+          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
+      }
+    }
+
+    // ── Entrada da página ─────────────────────────────────────
+    window.fichaPageInit = function() {
+      initPdfJs()
+      // popular select de matérias
+      const sel = document.getElementById('fichas-subject')
+      if (subjects && subjects.length) {
+        sel.innerHTML = '<option value="">Matéria...</option>' +
+          subjects.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('')
+      }
+    }
+
+    // ── Seleção de arquivo ────────────────────────────────────
+    window.fichaFileSelected = async function(ev) {
+      const file = ev.target.files[0]
+      if (!file) return
+      currentFile = file
+      ev.target.value = ''
+
+      document.getElementById('fichas-empty').style.display = 'none'
+      document.getElementById('fichas-viewer').style.display = 'block'
+      document.getElementById('fichas-filename').textContent = file.name
+      fichaTimerReset()
+      clearCrop()
+
+      if (file.type === 'application/pdf') {
+        isImage = false
+        await loadPdf(file)
+      } else {
+        isImage = true
+        await loadImage(file)
+      }
+    }
+
+    async function loadPdf(file) {
+      notify('Carregando PDF...')
+      const buf = await file.arrayBuffer()
+      pdfDoc = await pdfjsLib.getDocument(new Uint8Array(buf)).promise
+      totalPages = pdfDoc.numPages
+      currentPage = 1
+      document.getElementById('fichas-nav').style.display = totalPages > 1 ? 'flex' : 'none'
+      await renderPage(currentPage)
+    }
+
+    async function loadImage(file) {
+      pdfDoc = null; totalPages = 1; currentPage = 1
+      document.getElementById('fichas-nav').style.display = 'none'
+      const canvas = document.getElementById('fichas-canvas')
+      const ctx = canvas.getContext('2d')
+      const img = await createImageBitmap(file)
+      // escala para max 1200px de largura
+      const scale = Math.min(1, 1200 / img.width)
+      canvas.width  = Math.round(img.width  * scale)
+      canvas.height = Math.round(img.height * scale)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      updatePageLabel()
+    }
+
+    async function renderPage(num) {
+      if (!pdfDoc) return
+      const page = await pdfDoc.getPage(num)
+      const scale = Math.min(1.5, 900 / page.getViewport({scale:1}).width)
+      const vp = page.getViewport({scale})
+      const canvas = document.getElementById('fichas-canvas')
+      canvas.width  = vp.width
+      canvas.height = vp.height
+      await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise
+      currentPage = num
+      clearCrop()
+      updatePageLabel()
+    }
+
+    function updatePageLabel() {
+      document.getElementById('fichas-page-label').textContent =
+        `Pág ${currentPage} / ${totalPages || 1}`
+    }
+
+    window.fichaGotoPage = async function(n) {
+      if (!pdfDoc) return
+      n = Math.max(1, Math.min(totalPages, n))
+      if (n === currentPage) return
+      await renderPage(n)
+    }
+
+    // ── Timer por questão ─────────────────────────────────────
+    window.fichaTimerToggle = function() {
+      timerRunning ? pauseTimer() : startTimer()
+    }
+
+    function startTimer() {
+      timerRunning = true
+      document.getElementById('fichas-timer-btn').textContent = '⏸ Pausar'
+      timerIv = setInterval(() => {
+        timerSec++
+        document.getElementById('fichas-timer-display').textContent = fmtTime(timerSec)
+      }, 1000)
+    }
+
+    function pauseTimer() {
+      timerRunning = false
+      clearInterval(timerIv)
+      document.getElementById('fichas-timer-btn').textContent = '▶ Continuar'
+    }
+
+    window.fichaTimerReset = function() {
+      pauseTimer()
+      timerSec = 0
+      document.getElementById('fichas-timer-display').textContent = '00:00'
+      document.getElementById('fichas-timer-btn').textContent = '▶ Iniciar'
+    }
+
+    function fmtTime(s) {
+      const m = Math.floor(s / 60).toString().padStart(2,'0')
+      const ss = (s % 60).toString().padStart(2,'0')
+      return `${m}:${ss}`
+    }
+
+    // ── Seleção de recorte (mouse) ────────────────────────────
+    window.fichaMouseDown = function(e) {
+      const canvas = document.getElementById('fichas-canvas')
+      const canvR  = canvas.getBoundingClientRect()
+      const wrapR  = document.getElementById('fichas-canvas-wrap').getBoundingClientRect()
+      const scaleX = canvas.width  / canvR.width
+      const scaleY = canvas.height / canvR.height
+      cropStart = {
+        cx: (e.clientX - canvR.left) * scaleX,
+        cy: (e.clientY - canvR.top)  * scaleY,
+        sx: e.clientX - wrapR.left,
+        sy: e.clientY - wrapR.top
+      }
+      selecting = true; cropEnd = null; cropRect = null
+      const ov = document.getElementById('fichas-overlay')
+      ov.style.display = 'none'
+      document.getElementById('fichas-save-crop-btn').style.display = 'none'
+    }
+
+    window.fichaMouseMove = function(e) {
+      if (!selecting) return
+      const canvas = document.getElementById('fichas-canvas')
+      const canvR  = canvas.getBoundingClientRect()
+      const wrapR  = document.getElementById('fichas-canvas-wrap').getBoundingClientRect()
+      const scaleX = canvas.width  / canvR.width
+      const scaleY = canvas.height / canvR.height
+      cropEnd = {
+        cx: (e.clientX - canvR.left) * scaleX,
+        cy: (e.clientY - canvR.top)  * scaleY,
+        sx: e.clientX - wrapR.left,
+        sy: e.clientY - wrapR.top
+      }
+      // atualiza overlay visual
+      const ov = document.getElementById('fichas-overlay')
+      const x  = Math.min(cropStart.sx, cropEnd.sx)
+      const y  = Math.min(cropStart.sy, cropEnd.sy)
+      const w  = Math.abs(cropEnd.sx - cropStart.sx)
+      const h  = Math.abs(cropEnd.sy - cropStart.sy)
+      ov.style.cssText = `display:block;position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;border:2.5px dashed var(--coral);background:rgba(232,66,10,.1);pointer-events:none;border-radius:3px`
+    }
+
+    window.fichaMouseUp = function(e) {
+      if (!selecting) return
+      selecting = false
+      if (!cropEnd) return
+      const w = Math.abs(cropEnd.cx - cropStart.cx)
+      const h = Math.abs(cropEnd.cy - cropStart.cy)
+      if (w < 20 || h < 20) { clearCrop(); return }
+      cropRect = {
+        x: Math.min(cropStart.cx, cropEnd.cx),
+        y: Math.min(cropStart.cy, cropEnd.cy),
+        w, h
+      }
+      document.getElementById('fichas-save-crop-btn').style.display = 'block'
+    }
+
+    function clearCrop() {
+      cropRect = null; selecting = false; cropStart = null; cropEnd = null
+      document.getElementById('fichas-overlay').style.display = 'none'
+      document.getElementById('fichas-save-crop-btn').style.display = 'none'
+    }
+
+    // ── Salvar no Caderno de Erros ────────────────────────────
+    window.fichaSalvarErro = async function(fullPage) {
+      const canvas = document.getElementById('fichas-canvas')
+      let imgBase64
+
+      if (!fullPage && cropRect) {
+        // recorte selecionado
+        const off = document.createElement('canvas')
+        // limita recorte a 1000px largura para não pesar
+        const scale = Math.min(1, 1000 / cropRect.w)
+        off.width  = Math.round(cropRect.w * scale)
+        off.height = Math.round(cropRect.h * scale)
+        off.getContext('2d').drawImage(canvas,
+          cropRect.x, cropRect.y, cropRect.w, cropRect.h,
+          0, 0, off.width, off.height)
+        imgBase64 = off.toDataURL('image/jpeg', 0.82)
+      } else {
+        // página inteira — escala para max 800px
+        const scale = Math.min(1, 800 / canvas.width)
+        const off = document.createElement('canvas')
+        off.width  = Math.round(canvas.width  * scale)
+        off.height = Math.round(canvas.height * scale)
+        off.getContext('2d').drawImage(canvas, 0, 0, off.width, off.height)
+        imgBase64 = off.toDataURL('image/jpeg', 0.75)
+      }
+
+      const subjectEl = document.getElementById('fichas-subject')
+      const subjectId   = subjectEl.value || null
+      const subjectName = subjectId ? (subjectEl.options[subjectEl.selectedIndex]?.text || '') : ''
+      const notes       = document.getElementById('fichas-notes').value.trim()
+
+      const { error } = await dbInsert('caderno_erros', {
+        user_id: currentUser.id,
+        subject_id: subjectId,
+        subject_name: subjectName,
+        ficha_name: currentFile?.name || '',
+        question_image: imgBase64,
+        notes,
+        time_spent: timerSec,
+        page_num: currentPage
+      })
+
+      if (error) { notify('Erro ao salvar: ' + (error.message || JSON.stringify(error))); return }
+
+      notify('✓ Salvo no Caderno de Erros!')
+      clearCrop()
+      document.getElementById('fichas-notes').value = ''
+      fichaTimerReset()
+    }
+  })()
+
+  // ══════════════════════════════════════════════════════════
+  //  CADERNO DE ERROS
+  // ══════════════════════════════════════════════════════════
+  let cadernoData = []
+  let cadernoFiltroSid = null
+
+  async function cadernoLoad() {
+    cadernoData = await dbSelect('caderno_erros', 'select=*')
+    cadernoRenderFilters()
+    cadernoRender()
+  }
+
+  function cadernoRenderFilters() {
+    const wrap = document.getElementById('caderno-filters')
+    // pega matérias únicas
+    const sigsMap = {}
+    cadernoData.forEach(e => {
+      if (e.subject_id) sigsMap[e.subject_id] = e.subject_name || e.subject_id
+    })
+    const todaBtn = `<button class="calc-period-tab${cadernoFiltroSid === null ? ' active' : ''}" onclick="cadernoFiltrar(null, this)">Todas</button>`
+    const sigsHtml = Object.entries(sigsMap).map(([sid, nome]) =>
+      `<button class="calc-period-tab${cadernoFiltroSid === sid ? ' active' : ''}" onclick="cadernoFiltrar('${sid}', this)">${escHtml(nome)}</button>`
+    ).join('')
+    wrap.innerHTML = todaBtn + sigsHtml
+  }
+
+  window.cadernoFiltrar = function(sid, btn) {
+    cadernoFiltroSid = sid
+    document.querySelectorAll('#caderno-filters .calc-period-tab').forEach(b => b.classList.remove('active'))
+    if (btn) btn.classList.add('active')
+    cadernoRender()
+  }
+
+  function cadernoRender() {
+    const lista = cadernoData.filter(e => cadernoFiltroSid === null || e.subject_id === cadernoFiltroSid)
+    const grid = document.getElementById('caderno-grid')
+    const empty = document.getElementById('caderno-empty')
+    if (lista.length === 0) { empty.style.display = 'block'; grid.innerHTML = ''; return }
+    empty.style.display = 'none'
+    grid.innerHTML = lista.map(e => {
+      const dt = new Date(e.created_at).toLocaleDateString('pt-BR')
+      const tempo = e.time_spent ? fmtCadernoTime(e.time_spent) : '—'
+      const cor = subjects.find(s => s.id === e.subject_id)?.color || '#8a8278'
+      return `
+        <div class="erro-card" id="errocard-${e.id}">
+          ${e.question_image ? `<img class="erro-card-img" src="${e.question_image}" alt="questão">` : '<div style="height:80px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:2rem">📄</div>'}
+          <div class="erro-card-body">
+            <div class="erro-card-subject">
+              <span style="width:8px;height:8px;border-radius:50%;background:${cor};display:inline-block"></span>
+              ${escHtml(e.subject_name || 'Sem matéria')}
+            </div>
+            ${e.ficha_name ? `<div style="font-size:.73rem;color:var(--muted);margin-bottom:.3rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 ${escHtml(e.ficha_name)}${e.page_num > 1 ? ' · Pág '+e.page_num : ''}</div>` : ''}
+            <textarea class="erro-card-notes-inp" rows="3"
+              placeholder="Clique para adicionar notas..."
+              onblur="cadernoSaveNotes('${e.id}', this.value)">${escHtml(e.notes || '')}</textarea>
+            <div class="erro-card-meta">
+              <span>${dt}</span>
+              <span>⏱ ${tempo}</span>
+              <button onclick="cadernoDelete('${e.id}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.8rem;padding:2px 5px;border-radius:5px" title="Apagar">✕</button>
+            </div>
+          </div>
+        </div>`
+    }).join('')
+  }
+
+  function fmtCadernoTime(s) {
+    if (s < 60) return s + 's'
+    return Math.floor(s/60) + 'min ' + (s%60) + 's'
+  }
+
+  async function cadernoSaveNotes(id, notes) {
+    await fetch(`${API}/caderno_erros?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ notes })
+    })
+  }
+
+  window.cadernoDelete = async function(id) {
+    await dbDelete('caderno_erros', id)
+    cadernoData = cadernoData.filter(e => e.id !== id)
+    cadernoRenderFilters()
+    cadernoRender()
   }
 </script>
 </body>
