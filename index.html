@@ -1148,6 +1148,7 @@ body {
             <div class="calc-dot" style="background:${s.color}"></div>
             <div class="calc-name">${s.name}</div>
             <div class="calc-media-badge ${mediaClass}">${mediaStr ? 'Final: '+mediaStr : '—'}</div>
+            <div id="calc-extra-${s.id}" style="display:flex;gap:.3rem;align-items:center"></div>
             <button class="btn-delete" style="margin-left:auto" onclick="event.stopPropagation();deleteSubject('${s.id}')">✕</button>
             <span style="color:var(--muted);font-size:.75rem;margin-left:.3rem">▾</span>
           </div>
@@ -1890,6 +1891,18 @@ body {
     return totalW > 0 ? soma / totalW : null
   }
 
+  function quantoPrecisoNoPeriodo(period, target) {
+    // Quanto preciso nas provas restantes DO PERÍODO para atingir a meta
+    const asses = (period.assessments || [])
+    const done = asses.filter(a => a.grade !== null && a.grade !== '' && !isNaN(parseFloat(a.grade)))
+    const todo = asses.filter(a => a.grade === null || a.grade === '' || isNaN(parseFloat(a.grade)))
+    if (!todo.length || !asses.length) return null
+    const totalW  = asses.reduce((s,a) => s + (parseFloat(a.weight)||1), 0)
+    const doneSum = done.reduce((s,a) => s + parseFloat(a.grade)*(parseFloat(a.weight)||1), 0)
+    const todoW   = todo.reduce((s,a) => s + (parseFloat(a.weight)||1), 0)
+    return todoW > 0 ? (target*totalW - doneSum) / todoW : null
+  }
+
   function quantoPrecisoFinal(periods, target) {
     // Quanto preciso tirar nos bimestres restantes (sem nota) para atingir a meta
     const done = (periods||[]).filter(p => calcularMedia(p.assessments||[]) !== null)
@@ -1928,6 +1941,7 @@ body {
           <div class="calc-dot" style="background:${s.color}"></div>
           <div class="calc-name">${s.name}</div>
           <div class="calc-media-badge ${mediaClass}">${mediaStr ? 'Final: '+mediaStr : '—'}</div>
+          <div id="calc-extra-${s.id}" style="display:flex;gap:.3rem;align-items:center"></div>
           <span style="color:#555;margin-left:.3rem;font-size:.75rem">▾</span>
         </div>
         <div class="calc-body" id="calc-body-${s.id}" style="display:none"></div>
@@ -1940,6 +1954,7 @@ body {
     if (body.style.display !== 'none') { body.style.display = 'none'; return }
     body.style.display = 'block'
     body.innerHTML = renderCalcBody(sid)
+    refreshCalcHeader(sid)
   }
 
   function renderCalcBody(sid) {
@@ -2248,12 +2263,46 @@ body {
     const d = getSubjectData(sid)
     const target = d.target || 6
     const mediaFinal = calcularMediaFinal(d.periods)
+
+    // Badge Final
     const badge = document.querySelector(`#calc-${sid} .calc-media-badge`)
     if (badge) {
       const cls = mediaFinal === null ? '' : mediaFinal >= target ? 'verde' : mediaFinal >= target*0.75 ? 'amarelo' : 'vermelho'
       badge.className = `calc-media-badge ${cls}`
       badge.textContent = mediaFinal !== null ? 'Final: '+mediaFinal.toFixed(1) : '—'
     }
+
+    // Badges extras: média do período ativo + quanto precisa no período
+    const extra = document.getElementById(`calc-extra-${sid}`)
+    if (!extra) return
+    if (!d.periods || d.periods.length === 0) { extra.innerHTML = ''; return }
+
+    const piAtivo = Math.min(calcActivePeriod[sid] ?? 0, d.periods.length - 1)
+    const periodo = d.periods[piAtivo]
+    if (!periodo) { extra.innerHTML = ''; return }
+
+    const mediaPeriodo = calcularMedia(periodo.assessments || [])
+    const precisa = quantoPrecisoNoPeriodo(periodo, target)
+
+    let mediaBadge = ''
+    if (mediaPeriodo !== null) {
+      const cls = mediaPeriodo >= target ? 'verde' : mediaPeriodo >= target*0.75 ? 'amarelo' : 'vermelho'
+      mediaBadge = `<span class="calc-media-badge ${cls}" style="font-size:.7rem;padding:.15rem .4rem">${periodo.name || ('P'+(piAtivo+1))}: ${mediaPeriodo.toFixed(1)}</span>`
+    }
+
+    let faltaBadge = ''
+    if (precisa !== null) {
+      if (precisa > 10) {
+        faltaBadge = `<span class="calc-media-badge vermelho" style="font-size:.7rem;padding:.15rem .4rem">Impossível</span>`
+      } else if (precisa <= 0) {
+        faltaBadge = `<span class="calc-media-badge verde" style="font-size:.7rem;padding:.15rem .4rem">✓ Meta ok</span>`
+      } else {
+        const cls = precisa <= target ? 'amarelo' : 'vermelho'
+        faltaBadge = `<span class="calc-media-badge ${cls}" style="font-size:.7rem;padding:.15rem .4rem">Falta ${precisa.toFixed(1)}</span>`
+      }
+    }
+
+    extra.innerHTML = mediaBadge + faltaBadge
   }
 
   // ── TIMER / POMODORO ─────────────────────────────────────────
