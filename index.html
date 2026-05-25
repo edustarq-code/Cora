@@ -1848,7 +1848,15 @@ body {
 
   // ── CALCULADORA DE MÉDIAS (com Períodos) ─────────────────────────────────────
   let calcData = {}
-  const calcActivePeriod = {} // aba ativa por matéria (só em memória)
+  // aba ativa por matéria — persiste no localStorage para sobreviver a Ctrl+R
+  const _capStore = JSON.parse(localStorage.getItem('cora_active_period') || '{}')
+  const calcActivePeriod = new Proxy(_capStore, {
+    set(obj, prop, value) {
+      obj[prop] = value
+      localStorage.setItem('cora_active_period', JSON.stringify(obj))
+      return true
+    }
+  })
 
   function loadCalcData() {
     if (!currentUser) return
