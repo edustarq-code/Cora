@@ -638,6 +638,20 @@ body {
       font-family:'Geist',monospace;letter-spacing:.04em;text-align:center}
     .fichas-panel{display:flex;flex-direction:column;gap:.7rem}
 
+    /* ── FICHAS — BIBLIOTECA ─────────────────────────────── */
+    #fichas-library{display:none;margin-bottom:.9rem}
+    .fichas-lib-list{display:flex;flex-direction:column;gap:.35rem}
+    .ficha-item{display:flex;align-items:center;gap:.7rem;padding:.55rem .85rem;
+      background:var(--surface);border:1px solid var(--border);border-radius:10px;
+      transition:border-color .15s}
+    .ficha-item-active{border-color:var(--coral);background:var(--coral-soft)}
+    .ficha-item-icon{font-size:1.15rem;flex-shrink:0}
+    .ficha-item-info{flex:1;min-width:0}
+    .ficha-item-name{font-weight:600;font-size:.86rem;color:var(--ink);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .ficha-item-meta{font-size:.73rem;color:var(--muted)}
+    .ficha-item-actions{display:flex;gap:.3rem;flex-shrink:0}
+
     /* ── CADERNO DE ERROS ────────────────────────────────── */
     .erro-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:.9rem}
     .erro-card{border:1px solid var(--border);border-radius:12px;overflow:hidden;
@@ -928,6 +942,9 @@ body {
           </div>
         </div>
 
+        <!-- biblioteca de fichas salvas -->
+        <div id="fichas-library"></div>
+
         <div id="fichas-empty" style="text-align:center;padding:3.5rem 1rem;color:var(--muted)">
           <div style="font-size:3rem;margin-bottom:.8rem">📄</div>
           <div style="font-weight:700;color:var(--ink2);margin-bottom:.35rem">Nenhuma ficha carregada</div>
@@ -946,9 +963,9 @@ body {
                 <div id="fichas-overlay" style="display:none;position:absolute;border:2.5px dashed var(--coral);background:rgba(232,66,10,.1);pointer-events:none;border-radius:3px"></div>
               </div>
               <div id="fichas-nav" class="fichas-nav" style="display:none">
-                <button class="btn btn-ghost btn-sm" onclick="fichaGotoPage(fichaCurrentPage-1)">‹ Anterior</button>
+                <button class="btn btn-ghost btn-sm" onclick="fichaPagePrev()">‹ Anterior</button>
                 <span style="font-size:.84rem;color:var(--ink2)" id="fichas-page-label">Pág 1 / 1</span>
-                <button class="btn btn-ghost btn-sm" onclick="fichaGotoPage(fichaCurrentPage+1)">Próxima ›</button>
+                <button class="btn btn-ghost btn-sm" onclick="fichaPageNext()">Próxima ›</button>
               </div>
             </div>
             <!-- Painel lateral -->
@@ -3057,91 +3074,235 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
   // ══════════════════════════════════════════════════════════
   ;(function() {
     // ── Estado ───────────────────────────────────────────────
-    let pdfDoc = null
-    let currentPage = 1
-    let totalPages = 0
-    let isImage = false
-    let currentFile = null
+    let pdfDoc       = null
+    let currentPage  = 1
+    let totalPages   = 0
+    let isImage      = false
+    let currentFichaId = null   // id no IndexedDB da ficha ativa
 
     let timerRunning = false
-    let timerSec = 0
-    let timerIv = null
+    let timerSec     = 0
+    let timerIv      = null
 
-    let selecting = false
-    let cropStart = null  // {cx, cy, sx, sy}  canvas + screen coords
-    let cropEnd   = null
-    let cropRect  = null  // {x,y,w,h} in canvas pixels
+    let selecting  = false
+    let cropStart  = null
+    let cropEnd    = null
+    let cropRect   = null
 
-    // Inicializa PDF.js worker
+    // ── PDF.js ────────────────────────────────────────────────
     function initPdfJs() {
-      if (window.pdfjsLib) {
+      if (window.pdfjsLib)
         pdfjsLib.GlobalWorkerOptions.workerSrc =
           'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'
-      }
+    }
+
+    // ── IndexedDB ─────────────────────────────────────────────
+    let fichasDB = null
+    async function openDB() {
+      if (fichasDB) return fichasDB
+      return new Promise((res, rej) => {
+        const r = indexedDB.open('cora-fichas', 1)
+        r.onupgradeneeded = e => {
+          const db = e.target.result
+          if (!db.objectStoreNames.contains('fichas'))
+            db.createObjectStore('fichas', {keyPath:'id', autoIncrement:true})
+        }
+        r.onsuccess = e => { fichasDB = e.target.result; res(fichasDB) }
+        r.onerror   = () => rej(r.error)
+      })
+    }
+
+    async function idbGetAll() {
+      const db = await openDB()
+      return new Promise((res, rej) => {
+        const req = db.transaction('fichas','readonly').objectStore('fichas').getAll()
+        req.onsuccess = () => res((req.result||[]).sort((a,b) => b.savedAt - a.savedAt))
+        req.onerror   = () => rej(req.error)
+      })
+    }
+
+    async function idbGet(id) {
+      const db = await openDB()
+      return new Promise((res, rej) => {
+        const req = db.transaction('fichas','readonly').objectStore('fichas').get(id)
+        req.onsuccess = () => res(req.result)
+        req.onerror   = () => rej(req.error)
+      })
+    }
+
+    async function idbSave(entry) {
+      const db = await openDB()
+      return new Promise((res, rej) => {
+        const req = db.transaction('fichas','readwrite').objectStore('fichas')
+          .add({...entry, savedAt: Date.now()})
+        req.onsuccess = () => res(req.result)
+        req.onerror   = () => rej(req.error)
+      })
+    }
+
+    async function idbUpdateMeta(id, patch) {
+      const db = await openDB()
+      return new Promise((res, rej) => {
+        const store = db.transaction('fichas','readwrite').objectStore('fichas')
+        const get = store.get(id)
+        get.onsuccess = () => {
+          if (!get.result) return res()
+          const put = store.put({...get.result, ...patch})
+          put.onsuccess = () => res()
+          put.onerror   = () => rej(put.error)
+        }
+        get.onerror = () => rej(get.error)
+      })
+    }
+
+    async function idbDelete(id) {
+      const db = await openDB()
+      return new Promise((res, rej) => {
+        const req = db.transaction('fichas','readwrite').objectStore('fichas').delete(id)
+        req.onsuccess = () => res()
+        req.onerror   = () => rej(req.error)
+      })
+    }
+
+    // ── Biblioteca de fichas salvas ───────────────────────────
+    async function renderLibrary() {
+      const all  = await idbGetAll()
+      const wrap = document.getElementById('fichas-library')
+      if (!all.length) { wrap.style.display = 'none'; return }
+      wrap.style.display = 'block'
+      wrap.innerHTML = `
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem">📚 Fichas salvas</div>
+        <div class="fichas-lib-list">
+          ${all.map(f => {
+            const dt  = new Date(f.savedAt).toLocaleDateString('pt-BR')
+            const pgs = f.totalPages > 1 ? ` · ${f.totalPages} págs` : ''
+            const act = f.id === currentFichaId ? ' ficha-item-active' : ''
+            return `<div class="ficha-item${act}" id="fichaitem-${f.id}">
+              <span class="ficha-item-icon">${f.type==='pdf'?'📄':'🖼️'}</span>
+              <div class="ficha-item-info">
+                <div class="ficha-item-name" title="${escHtml(f.name)}">${escHtml(f.name)}</div>
+                <div class="ficha-item-meta">${dt}${pgs}</div>
+              </div>
+              <div class="ficha-item-actions">
+                <button class="btn btn-coral btn-sm" onclick="fichaCarregar(${f.id})">Abrir</button>
+                <button class="btn btn-ghost btn-sm" onclick="fichaApagarLib(${f.id})" title="Apagar">✕</button>
+              </div>
+            </div>`
+          }).join('')}
+        </div>`
     }
 
     // ── Entrada da página ─────────────────────────────────────
     window.fichaPageInit = function() {
       initPdfJs()
-      // popular select de matérias
       const sel = document.getElementById('fichas-subject')
-      if (subjects && subjects.length) {
+      if (subjects && subjects.length)
         sel.innerHTML = '<option value="">Matéria...</option>' +
           subjects.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('')
-      }
+      renderLibrary()
     }
 
-    // ── Seleção de arquivo ────────────────────────────────────
+    // ── Importar novo arquivo ─────────────────────────────────
     window.fichaFileSelected = async function(ev) {
       const file = ev.target.files[0]
       if (!file) return
-      currentFile = file
       ev.target.value = ''
 
-      document.getElementById('fichas-empty').style.display = 'none'
+      document.getElementById('fichas-empty').style.display  = 'none'
       document.getElementById('fichas-viewer').style.display = 'block'
       document.getElementById('fichas-filename').textContent = file.name
       fichaTimerReset()
       clearCrop()
 
-      if (file.type === 'application/pdf') {
+      const buf   = await file.arrayBuffer()
+      const fType = file.type === 'application/pdf' ? 'pdf' : 'image'
+      const mtype = file.type
+
+      // salva no IndexedDB antes de renderizar
+      const savedId = await idbSave({name: file.name, type: fType, data: buf, mtype, totalPages: 0, lastPage: 1})
+      currentFichaId = savedId
+
+      if (fType === 'pdf') { isImage = false; await loadPdf(buf) }
+      else                 { isImage = true;  await loadImage(buf, mtype) }
+
+      // atualiza contagem de páginas no registro
+      await idbUpdateMeta(currentFichaId, {totalPages, lastPage: currentPage})
+      await renderLibrary()
+    }
+
+    // ── Carregar ficha salva da biblioteca ────────────────────
+    window.fichaCarregar = async function(id) {
+      const entry = await idbGet(id)
+      if (!entry) return
+      currentFichaId = id
+
+      document.getElementById('fichas-empty').style.display  = 'none'
+      document.getElementById('fichas-viewer').style.display = 'block'
+      document.getElementById('fichas-filename').textContent = entry.name
+      fichaTimerReset()
+      clearCrop()
+
+      // destacar na biblioteca
+      document.querySelectorAll('.ficha-item').forEach(el => el.classList.remove('ficha-item-active'))
+      const el = document.getElementById(`fichaitem-${id}`)
+      if (el) el.classList.add('ficha-item-active')
+
+      if (entry.type === 'pdf') {
         isImage = false
-        await loadPdf(file)
+        await loadPdf(entry.data)
+        if (entry.lastPage && entry.lastPage > 1) await renderPage(Math.min(entry.lastPage, totalPages))
       } else {
         isImage = true
-        await loadImage(file)
+        await loadImage(entry.data, entry.mtype || 'image/jpeg')
       }
     }
 
-    async function loadPdf(file) {
-      notify('Carregando PDF...')
-      const buf = await file.arrayBuffer()
-      pdfDoc = await pdfjsLib.getDocument(new Uint8Array(buf)).promise
-      totalPages = pdfDoc.numPages
-      currentPage = 1
-      document.getElementById('fichas-nav').style.display = totalPages > 1 ? 'flex' : 'none'
-      await renderPage(currentPage)
+    // ── Apagar ficha da biblioteca ────────────────────────────
+    window.fichaApagarLib = async function(id) {
+      await idbDelete(id)
+      if (currentFichaId === id) {
+        currentFichaId = null; pdfDoc = null
+        const remaining = await idbGetAll()
+        if (!remaining.length) {
+          document.getElementById('fichas-viewer').style.display = 'none'
+          document.getElementById('fichas-empty').style.display  = 'block'
+        }
+      }
+      await renderLibrary()
+      notify('Ficha apagada')
     }
 
-    async function loadImage(file) {
+    // ── Carregar PDF (ArrayBuffer) ────────────────────────────
+    async function loadPdf(buf) {
+      notify('Carregando PDF...')
+      pdfDoc      = await pdfjsLib.getDocument(new Uint8Array(buf)).promise
+      totalPages  = pdfDoc.numPages
+      currentPage = 1
+      document.getElementById('fichas-nav').style.display = totalPages > 1 ? 'flex' : 'none'
+      await renderPage(1)
+    }
+
+    // ── Carregar imagem (ArrayBuffer) ─────────────────────────
+    async function loadImage(buf, mtype) {
       pdfDoc = null; totalPages = 1; currentPage = 1
       document.getElementById('fichas-nav').style.display = 'none'
+      const blob   = new Blob([buf], {type: mtype || 'image/jpeg'})
       const canvas = document.getElementById('fichas-canvas')
-      const ctx = canvas.getContext('2d')
-      const img = await createImageBitmap(file)
-      // escala para max 1200px de largura
-      const scale = Math.min(1, 1200 / img.width)
+      const ctx    = canvas.getContext('2d')
+      const img    = await createImageBitmap(blob)
+      const scale  = Math.min(1, 1200 / img.width)
       canvas.width  = Math.round(img.width  * scale)
       canvas.height = Math.round(img.height * scale)
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       updatePageLabel()
     }
 
+    // ── Renderizar página PDF ─────────────────────────────────
     async function renderPage(num) {
       if (!pdfDoc) return
       const page = await pdfDoc.getPage(num)
       const scale = Math.min(1.5, 900 / page.getViewport({scale:1}).width)
-      const vp = page.getViewport({scale})
+      const vp    = page.getViewport({scale})
       const canvas = document.getElementById('fichas-canvas')
       canvas.width  = vp.width
       canvas.height = vp.height
@@ -3149,6 +3310,7 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       currentPage = num
       clearCrop()
       updatePageLabel()
+      if (currentFichaId) idbUpdateMeta(currentFichaId, {lastPage: currentPage})
     }
 
     function updatePageLabel() {
@@ -3163,10 +3325,12 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       await renderPage(n)
     }
 
-    // ── Timer por questão ─────────────────────────────────────
-    window.fichaTimerToggle = function() {
-      timerRunning ? pauseTimer() : startTimer()
-    }
+    // Expostos para os botões HTML
+    window.fichaPagePrev = function() { fichaGotoPage(currentPage - 1) }
+    window.fichaPageNext = function() { fichaGotoPage(currentPage + 1) }
+
+    // ── Timer ─────────────────────────────────────────────────
+    window.fichaTimerToggle = function() { timerRunning ? pauseTimer() : startTimer() }
 
     function startTimer() {
       timerRunning = true
@@ -3184,19 +3348,16 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     }
 
     window.fichaTimerReset = function() {
-      pauseTimer()
-      timerSec = 0
+      pauseTimer(); timerSec = 0
       document.getElementById('fichas-timer-display').textContent = '00:00'
       document.getElementById('fichas-timer-btn').textContent = '▶ Iniciar'
     }
 
     function fmtTime(s) {
-      const m = Math.floor(s / 60).toString().padStart(2,'0')
-      const ss = (s % 60).toString().padStart(2,'0')
-      return `${m}:${ss}`
+      return `${Math.floor(s/60).toString().padStart(2,'0')}:${(s%60).toString().padStart(2,'0')}`
     }
 
-    // ── Seleção de recorte (mouse) ────────────────────────────
+    // ── Recorte (mouse) ────────────────────────────────────────
     window.fichaMouseDown = function(e) {
       const canvas = document.getElementById('fichas-canvas')
       const canvR  = canvas.getBoundingClientRect()
@@ -3210,8 +3371,7 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
         sy: e.clientY - wrapR.top
       }
       selecting = true; cropEnd = null; cropRect = null
-      const ov = document.getElementById('fichas-overlay')
-      ov.style.display = 'none'
+      document.getElementById('fichas-overlay').style.display = 'none'
       document.getElementById('fichas-save-crop-btn').style.display = 'none'
     }
 
@@ -3228,7 +3388,6 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
         sx: e.clientX - wrapR.left,
         sy: e.clientY - wrapR.top
       }
-      // atualiza overlay visual
       const ov = document.getElementById('fichas-overlay')
       const x  = Math.min(cropStart.sx, cropEnd.sx)
       const y  = Math.min(cropStart.sy, cropEnd.sy)
@@ -3254,8 +3413,10 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
 
     function clearCrop() {
       cropRect = null; selecting = false; cropStart = null; cropEnd = null
-      document.getElementById('fichas-overlay').style.display = 'none'
-      document.getElementById('fichas-save-crop-btn').style.display = 'none'
+      const ov  = document.getElementById('fichas-overlay')
+      const btn = document.getElementById('fichas-save-crop-btn')
+      if (ov)  ov.style.display  = 'none'
+      if (btn) btn.style.display = 'none'
     }
 
     // ── Salvar no Caderno de Erros ────────────────────────────
@@ -3264,40 +3425,38 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       let imgBase64
 
       if (!fullPage && cropRect) {
-        // recorte selecionado
-        const off = document.createElement('canvas')
-        // limita recorte a 1000px largura para não pesar
+        const off   = document.createElement('canvas')
         const scale = Math.min(1, 1000 / cropRect.w)
         off.width  = Math.round(cropRect.w * scale)
         off.height = Math.round(cropRect.h * scale)
-        off.getContext('2d').drawImage(canvas,
-          cropRect.x, cropRect.y, cropRect.w, cropRect.h,
+        off.getContext('2d').drawImage(canvas, cropRect.x, cropRect.y, cropRect.w, cropRect.h,
           0, 0, off.width, off.height)
         imgBase64 = off.toDataURL('image/jpeg', 0.82)
       } else {
-        // página inteira — escala para max 800px
         const scale = Math.min(1, 800 / canvas.width)
-        const off = document.createElement('canvas')
+        const off   = document.createElement('canvas')
         off.width  = Math.round(canvas.width  * scale)
         off.height = Math.round(canvas.height * scale)
         off.getContext('2d').drawImage(canvas, 0, 0, off.width, off.height)
         imgBase64 = off.toDataURL('image/jpeg', 0.75)
       }
 
-      const subjectEl = document.getElementById('fichas-subject')
+      const subjectEl   = document.getElementById('fichas-subject')
       const subjectId   = subjectEl.value || null
       const subjectName = subjectId ? (subjectEl.options[subjectEl.selectedIndex]?.text || '') : ''
       const notes       = document.getElementById('fichas-notes').value.trim()
+      const fichaEntry  = currentFichaId ? await idbGet(currentFichaId) : null
+      const fichaName   = fichaEntry?.name || ''
 
       const { error } = await dbInsert('caderno_erros', {
-        user_id: currentUser.id,
-        subject_id: subjectId,
+        user_id:      currentUser.id,
+        subject_id:   subjectId,
         subject_name: subjectName,
-        ficha_name: currentFile?.name || '',
+        ficha_name:   fichaName,
         question_image: imgBase64,
         notes,
         time_spent: timerSec,
-        page_num: currentPage
+        page_num:   currentPage
       })
 
       if (error) { notify('Erro ao salvar: ' + (error.message || JSON.stringify(error))); return }
