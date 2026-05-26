@@ -3655,17 +3655,20 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
   // ── Verificar / criar perfil ───────────────────────────────
   async function checkProfile() {
     const data = await dbSelect('profiles', `select=*&id=eq.${currentUser.id}`)
-    if (data && data.length > 0) {
-      myProfile = data[0]
+    const existing = data && data.length > 0 ? data[0] : null
+
+    if (existing && existing.username) {
+      // perfil completo com username
+      myProfile = existing
       _amigosUpdateMyDisplay()
     } else {
-      // primeiro acesso: pede username
+      // sem perfil ou sem username: pede para escolher
       const ov = document.getElementById('username-modal-overlay')
       ov.style.display = 'flex'
-      // pré-preenche com nome do Google
+      // pré-preenche com sugestão baseada no nome do Google
       const sugestao = (currentUser.user_metadata?.full_name || currentUser.email.split('@')[0])
         .toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20)
-      document.getElementById('username-input').value = sugestao
+      document.getElementById('username-input').value = existing?.username || sugestao
     }
   }
 
@@ -3689,9 +3692,27 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     if (existing && existing.length > 0) { errEl.textContent = '@' + uname + ' já está em uso.'; return }
 
     const displayName = currentUser.user_metadata?.full_name || ''
-    const { error } = await dbInsert('profiles', {
-      id: currentUser.id, username: uname, display_name: displayName
+
+    // Tenta update primeiro (perfil pode já existir sem username)
+    const patchRes = await fetch(`${API}/profiles?id=eq.${currentUser.id}`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + currentSession.access_token,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({ username: uname, display_name: displayName })
     })
+    const patchData = await patchRes.json()
+    let error = patchRes.ok ? null : patchData
+
+    // Se não encontrou linha (0 rows), faz insert
+    if (patchRes.ok && (!patchData || patchData.length === 0)) {
+      const ins = await dbInsert('profiles', { id: currentUser.id, username: uname, display_name: displayName })
+      error = ins.error
+    }
+
     if (error) { errEl.textContent = 'Erro: ' + (error.message || JSON.stringify(error)); return }
 
     myProfile = { id: currentUser.id, username: uname, display_name: displayName }
