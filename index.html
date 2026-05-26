@@ -668,6 +668,21 @@ body {
     .erro-card-meta{font-size:.73rem;color:var(--muted);display:flex;justify-content:space-between;
       align-items:center;margin-top:.55rem}
 
+    /* ── AMIGOS ─────────────────────────────── */
+    .amigo-card{display:flex;align-items:center;gap:.75rem;padding:.6rem .85rem;
+      background:var(--surface);border:1px solid var(--border);border-radius:10px;
+      transition:border-color .15s}
+    .amigo-avatar{width:36px;height:36px;border-radius:50%;background:var(--coral);
+      display:flex;align-items:center;justify-content:center;font-weight:700;
+      font-size:.9rem;color:#fff;flex-shrink:0}
+    .amigo-info{flex:1;min-width:0}
+    .amigo-name{font-weight:600;font-size:.88rem;color:var(--ink);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .amigo-username{font-size:.75rem;color:var(--muted)}
+    .amigos-section-title{font-size:.72rem;font-weight:700;letter-spacing:.07em;
+      text-transform:uppercase;color:var(--muted);margin:.9rem 0 .4rem}
+    .amigos-grid{display:flex;flex-direction:column;gap:.35rem}
+
     /* ── PAINEL DE FÓRMULAS ────────────────── */
     #formula-panel{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:95vw;
       background:var(--surface);border-left:1px solid var(--border);z-index:300;
@@ -756,6 +771,11 @@ body {
     </button>
     <button class="nav-item" onclick="goTo('caderno', this)">
       <span class="nav-icon">📕</span> Caderno de Erros
+    </button>
+
+    <div class="sidebar-section">Social</div>
+    <button class="nav-item" id="nav-amigos" onclick="goTo('amigos', this)">
+      <span class="nav-icon">👥</span> Amigos
     </button>
 
     <div class="sidebar-bottom">
@@ -1024,7 +1044,75 @@ body {
       </div>
     </div>
 
+    <!-- ── AMIGOS ── -->
+    <div id="page-amigos" class="page">
+      <div class="page-content">
+        <div class="ph">
+          <div class="ph-eyebrow">Social</div>
+          <div class="ph-title">Amigos</div>
+          <div class="ph-sub">Adicione amigos pelo @username e acompanhe quem estuda com você.</div>
+        </div>
+
+        <!-- Meu username -->
+        <div class="card" style="padding:.85rem 1rem;display:flex;align-items:center;gap:.85rem;margin-bottom:.2rem">
+          <div class="amigo-avatar" id="amigos-my-avatar" style="background:var(--ink)">?</div>
+          <div>
+            <div style="font-size:.73rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Seu username</div>
+            <div style="font-weight:700;font-size:1rem;color:var(--ink)" id="amigos-my-username">—</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="amigosMudarUsername()">Editar</button>
+        </div>
+
+        <!-- Busca -->
+        <div class="amigos-section-title">🔍 Adicionar amigo</div>
+        <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+          <input id="amigos-search-input" class="calc-inp-name" placeholder="@username do amigo"
+            style="flex:1" onkeydown="if(event.key==='Enter') amigosBuscar()"
+            oninput="this.value=this.value.replace(/[^a-z0-9_@]/gi,'').toLowerCase()">
+          <button class="btn btn-coral btn-sm" onclick="amigosBuscar()">Buscar</button>
+        </div>
+        <div id="amigos-search-result" class="amigos-grid" style="margin-bottom:.3rem"></div>
+
+        <!-- Pedidos recebidos -->
+        <div id="amigos-requests" style="display:none">
+          <div class="amigos-section-title">📬 Pedidos recebidos</div>
+          <div id="amigos-requests-list" class="amigos-grid"></div>
+        </div>
+
+        <!-- Lista de amigos -->
+        <div class="amigos-section-title">👥 Meus amigos</div>
+        <div id="amigos-empty" style="display:none;text-align:center;padding:2.5rem 1rem;color:var(--muted)">
+          <div style="font-size:2.5rem;margin-bottom:.5rem">👥</div>
+          <div style="font-weight:700;color:var(--ink2)">Nenhum amigo ainda</div>
+          <div style="font-size:.84rem;margin-top:.3rem">Busque pelo @username de alguém acima</div>
+        </div>
+        <div id="amigos-list" class="amigos-grid"></div>
+      </div>
+    </div>
+
   </main>
+
+  <!-- ── MODAL: escolher username ── -->
+  <div id="username-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)">
+    <div class="modal-box" style="max-width:380px">
+      <div class="modal-header">
+        <span>🎉 Bem-vindo ao Cora! Escolha seu @username</span>
+      </div>
+      <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem;line-height:1.6">
+        Seu @username permite que amigos te encontrem no app. Só letras minúsculas, números e _.
+      </p>
+      <div style="display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.4rem .7rem">
+        <span style="font-weight:700;color:var(--coral);font-size:1rem">@</span>
+        <input id="username-input" style="flex:1;background:none;border:none;outline:none;color:var(--ink);font-family:'Geist',sans-serif;font-size:.95rem"
+          placeholder="seuusername" maxlength="24"
+          oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')"
+          onkeydown="if(event.key==='Enter') usernameConfirm()">
+      </div>
+      <div id="username-error" style="font-size:.78rem;color:#c00;margin-top:.4rem;min-height:1.1rem"></div>
+      <button class="btn btn-coral" style="width:100%;margin-top:.9rem" onclick="usernameConfirm()">Salvar username</button>
+    </div>
+  </div>
+
 </div>
 
 <!-- PAINEL DE FÓRMULAS -->
@@ -1258,6 +1346,7 @@ body {
 
     await loadSubjects()
     await loadHoje()
+    checkProfile()   // verifica se já tem username (não bloqueia o load)
   }
 
   // ── Navegação ────────────────────────────────────────────────
@@ -1273,6 +1362,7 @@ body {
     if (pageId === 'formulas') loadFormulasPage()
     if (pageId === 'fichas') fichaPageInit()
     if (pageId === 'caderno') cadernoLoad()
+    if (pageId === 'amigos') amigosLoad()
   }
 
   // ── MATÉRIAS ─────────────────────────────────────────────────
@@ -3555,6 +3645,199 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     cadernoData = cadernoData.filter(e => e.id !== id)
     cadernoRenderFilters()
     cadernoRender()
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  AMIGOS & PERFIL
+  // ══════════════════════════════════════════════════════════
+  let myProfile = null
+
+  // ── Verificar / criar perfil ───────────────────────────────
+  async function checkProfile() {
+    const data = await dbSelect('profiles', `select=*&id=eq.${currentUser.id}`)
+    if (data && data.length > 0) {
+      myProfile = data[0]
+      _amigosUpdateMyDisplay()
+    } else {
+      // primeiro acesso: pede username
+      const ov = document.getElementById('username-modal-overlay')
+      ov.style.display = 'flex'
+      // pré-preenche com nome do Google
+      const sugestao = (currentUser.user_metadata?.full_name || currentUser.email.split('@')[0])
+        .toLowerCase().replace(/[^a-z0-9_]/g, '').slice(0, 20)
+      document.getElementById('username-input').value = sugestao
+    }
+  }
+
+  function _amigosUpdateMyDisplay() {
+    const el  = document.getElementById('amigos-my-username')
+    const av  = document.getElementById('amigos-my-avatar')
+    if (el && myProfile) el.textContent = '@' + myProfile.username
+    if (av && myProfile) av.textContent = (myProfile.display_name || myProfile.username || '?')[0].toUpperCase()
+  }
+
+  window.usernameConfirm = async function() {
+    const uname  = document.getElementById('username-input').value.trim()
+    const errEl  = document.getElementById('username-error')
+    errEl.textContent = ''
+
+    if (uname.length < 3) { errEl.textContent = 'Mínimo 3 caracteres.'; return }
+    if (uname.length > 24) { errEl.textContent = 'Máximo 24 caracteres.'; return }
+
+    // verifica se está disponível
+    const existing = await dbSelect('profiles', `select=id&username=eq.${uname}`)
+    if (existing && existing.length > 0) { errEl.textContent = '@' + uname + ' já está em uso.'; return }
+
+    const displayName = currentUser.user_metadata?.full_name || ''
+    const { error } = await dbInsert('profiles', {
+      id: currentUser.id, username: uname, display_name: displayName
+    })
+    if (error) { errEl.textContent = 'Erro: ' + (error.message || JSON.stringify(error)); return }
+
+    myProfile = { id: currentUser.id, username: uname, display_name: displayName }
+    document.getElementById('username-modal-overlay').style.display = 'none'
+    _amigosUpdateMyDisplay()
+    notify('✓ Username salvo! Bem-vindo ao Cora 👋')
+  }
+
+  window.amigosMudarUsername = function() {
+    document.getElementById('username-input').value = myProfile?.username || ''
+    document.getElementById('username-error').textContent = ''
+    document.getElementById('username-modal-overlay').style.display = 'flex'
+  }
+
+  // ── Carregar página de amigos ──────────────────────────────
+  async function amigosLoad() {
+    if (!myProfile) await checkProfile()
+    _amigosUpdateMyDisplay()
+
+    const friendships = await dbSelect('friendships', 'select=*&order=created_at.desc')
+
+    const received = friendships.filter(f => f.addressee_id === currentUser.id && f.status === 'pending')
+    const accepted = friendships.filter(f => f.status === 'accepted')
+
+    // coletar ids dos amigos / solicitantes para buscar perfis
+    const ids = new Set()
+    received.forEach(f => ids.add(f.requester_id))
+    accepted.forEach(f => {
+      ids.add(f.requester_id === currentUser.id ? f.addressee_id : f.requester_id)
+    })
+
+    const friendProfiles = {}
+    if (ids.size > 0) {
+      const profs = await dbSelect('profiles', `select=*&id=in.(${[...ids].join(',')})`)
+      if (profs) profs.forEach(p => { friendProfiles[p.id] = p })
+    }
+
+    // pedidos recebidos
+    const reqWrap  = document.getElementById('amigos-requests')
+    const reqList  = document.getElementById('amigos-requests-list')
+    if (received.length > 0) {
+      reqWrap.style.display = 'block'
+      reqList.innerHTML = received.map(f => {
+        const p = friendProfiles[f.requester_id] || {}
+        return `<div class="amigo-card">
+          <div class="amigo-avatar">${(p.display_name||p.username||'?')[0].toUpperCase()}</div>
+          <div class="amigo-info">
+            <div class="amigo-name">${escHtml(p.display_name || p.username || '—')}</div>
+            <div class="amigo-username">@${escHtml(p.username || '...')}</div>
+          </div>
+          <div style="display:flex;gap:.3rem;flex-shrink:0">
+            <button class="btn btn-coral btn-sm" onclick="amigosAceitar('${f.id}')">Aceitar</button>
+            <button class="btn btn-ghost btn-sm" onclick="amigosRecusar('${f.id}')">✕</button>
+          </div>
+        </div>`
+      }).join('')
+    } else { reqWrap.style.display = 'none' }
+
+    // lista de amigos aceitos
+    const listEl  = document.getElementById('amigos-list')
+    const emptyEl = document.getElementById('amigos-empty')
+    if (accepted.length > 0) {
+      emptyEl.style.display = 'none'
+      listEl.innerHTML = accepted.map(f => {
+        const fid = f.requester_id === currentUser.id ? f.addressee_id : f.requester_id
+        const p   = friendProfiles[fid] || {}
+        return `<div class="amigo-card">
+          <div class="amigo-avatar">${(p.display_name||p.username||'?')[0].toUpperCase()}</div>
+          <div class="amigo-info">
+            <div class="amigo-name">${escHtml(p.display_name || p.username || '—')}</div>
+            <div class="amigo-username">@${escHtml(p.username || '...')}</div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="amigosRemover('${f.id}')" title="Remover">✕</button>
+        </div>`
+      }).join('')
+    } else { emptyEl.style.display = 'block'; listEl.innerHTML = '' }
+  }
+
+  // ── Busca por username ─────────────────────────────────────
+  window.amigosBuscar = async function() {
+    const q = document.getElementById('amigos-search-input').value.trim().replace('@', '')
+    const resultEl = document.getElementById('amigos-search-result')
+    if (!q) { resultEl.innerHTML = ''; return }
+
+    const res = await dbSelect('profiles', `select=*&username=ilike.${q}&id=neq.${currentUser.id}`)
+    if (!res || !res.length) {
+      resultEl.innerHTML = `<div style="font-size:.84rem;color:var(--muted);padding:.4rem 0">Nenhum usuário encontrado com @${escHtml(q)}</div>`
+      return
+    }
+
+    // status atual de amizade com cada resultado
+    const friendships = await dbSelect('friendships', 'select=*')
+    const myFriends = new Set()
+    const myPending = new Set()
+    friendships.forEach(f => {
+      const other = f.requester_id === currentUser.id ? f.addressee_id : f.requester_id
+      if (f.status === 'accepted') myFriends.add(other)
+      if (f.status === 'pending' && f.requester_id === currentUser.id) myPending.add(f.addressee_id)
+    })
+
+    resultEl.innerHTML = res.map(p => {
+      let action = ''
+      if (myFriends.has(p.id))  action = `<span style="font-size:.8rem;color:var(--green);font-weight:700">✓ Amigo</span>`
+      else if (myPending.has(p.id)) action = `<span style="font-size:.8rem;color:var(--muted)">Pedido enviado</span>`
+      else action = `<button class="btn btn-coral btn-sm" onclick="amigosEnviar('${p.id}', this)">+ Adicionar</button>`
+      return `<div class="amigo-card">
+        <div class="amigo-avatar">${(p.display_name||p.username||'?')[0].toUpperCase()}</div>
+        <div class="amigo-info">
+          <div class="amigo-name">${escHtml(p.display_name || p.username)}</div>
+          <div class="amigo-username">@${escHtml(p.username)}</div>
+        </div>
+        ${action}
+      </div>`
+    }).join('')
+  }
+
+  // ── Ações de amizade ───────────────────────────────────────
+  window.amigosEnviar = async function(addresseeId, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '...' }
+    const { error } = await dbInsert('friendships', {
+      requester_id: currentUser.id, addressee_id: addresseeId, status: 'pending'
+    })
+    if (error) {
+      notify('Erro ao enviar pedido')
+      if (btn) { btn.disabled = false; btn.textContent = '+ Adicionar' }
+      return
+    }
+    if (btn) btn.parentElement.innerHTML = `<span style="font-size:.8rem;color:var(--muted)">Pedido enviado</span>`
+    notify('Pedido de amizade enviado!')
+  }
+
+  window.amigosAceitar = async function(fid) {
+    await dbUpdate('friendships', fid, { status: 'accepted' })
+    notify('Amigo adicionado! 🎉')
+    amigosLoad()
+  }
+
+  window.amigosRecusar = async function(fid) {
+    await dbDelete('friendships', fid)
+    amigosLoad()
+  }
+
+  window.amigosRemover = async function(fid) {
+    await dbDelete('friendships', fid)
+    notify('Amigo removido')
+    amigosLoad()
   }
 </script>
 </body>
