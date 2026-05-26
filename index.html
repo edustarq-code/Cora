@@ -837,6 +837,42 @@ body {
           </button>
         </div>
 
+        <!-- ── SESSÃO DE ESTUDOS ── -->
+        <div id="sessao-card" class="card" style="margin-bottom:1rem;border:2px solid var(--coral-soft);background:linear-gradient(135deg,var(--surface) 0%,rgba(232,66,10,.04) 100%)">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.8rem">
+            <div>
+              <div style="font-size:.7rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--coral);margin-bottom:.2rem">📚 Sessão de estudos</div>
+              <div id="sessao-timer-display" style="font-size:2.6rem;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);line-height:1;letter-spacing:-.02em">00:00:00</div>
+              <div id="sessao-stats" style="display:flex;gap:1.2rem;margin-top:.5rem;flex-wrap:wrap">
+                <div style="text-align:center">
+                  <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">Hoje</div>
+                  <div id="sessao-hoje" style="font-size:.92rem;font-weight:700;color:var(--ink)">0h 0min</div>
+                </div>
+                <div style="width:1px;background:var(--border)"></div>
+                <div style="text-align:center">
+                  <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">Esta semana</div>
+                  <div id="sessao-semana" style="font-size:.92rem;font-weight:700;color:var(--ink)">0h 0min</div>
+                </div>
+                <div style="width:1px;background:var(--border)"></div>
+                <div style="text-align:center">
+                  <div style="font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em">Este mês</div>
+                  <div id="sessao-mes" style="font-size:.92rem;font-weight:700;color:var(--ink)">0h 0min</div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:.45rem">
+              <button id="sessao-btn" onclick="sessaoToggle()"
+                style="display:flex;align-items:center;gap:.55rem;padding:.7rem 1.4rem;border-radius:14px;
+                  border:none;cursor:pointer;font-family:'Geist',sans-serif;font-size:.95rem;font-weight:700;
+                  background:var(--coral);color:#fff;box-shadow:0 4px 14px rgba(232,66,10,.35);
+                  transition:all .2s;white-space:nowrap">
+                ▶ Iniciar sessão
+              </button>
+              <div id="sessao-materia-label" style="font-size:.72rem;color:var(--muted);text-align:center;max-width:130px"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Rotinas diárias (recorrentes) -->
         <div class="card" style="margin-bottom:1rem">
           <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
@@ -1448,6 +1484,7 @@ body {
     await loadHoje()
     checkProfile()        // verifica se já tem username (não bloqueia o load)
     calcWeeklyHours()     // exibe horas semanais na sidebar
+    sessaoInit()          // inicializa cronômetro de sessão
   }
 
   // ── Navegação ────────────────────────────────────────────────
@@ -1457,7 +1494,7 @@ body {
     document.getElementById('page-' + pageId).classList.add('active')
     if (btn) btn.classList.add('active')
 
-    if (pageId === 'hoje') loadHoje()
+    if (pageId === 'hoje') { loadHoje(); sessaoInit() }
     if (pageId === 'cronograma') loadCronograma()
     if (pageId === 'materias') { loadCalcData(); loadMaterias() }
     if (pageId === 'formulas') loadFormulasPage()
@@ -4015,6 +4052,120 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       widget.style.display = totalMin > 0 ? 'block' : 'none'
     }
     return totalMin
+  }
+
+  // ══════════════════════════════════════════════════════════
+  // ── CRONÔMETRO DE SESSÃO DE ESTUDOS ────────────────────────
+  // ══════════════════════════════════════════════════════════
+  let sessaoAtiva      = false
+  let sessaoInicio     = null   // timestamp ms do início da sessão atual
+  let sessaoAcumulado  = 0      // segundos já registrados no localStorage hoje
+  let sessaoInterval   = null
+
+  const SESSAO_KEY = () => `cora_sessao_${currentUser?.id}_${new Date().toISOString().split('T')[0]}`
+
+  // Formata segundos → HH:MM:SS
+  function sessaoFmt(sec) {
+    const h = Math.floor(sec / 3600)
+    const m = Math.floor((sec % 3600) / 60)
+    const s = sec % 60
+    return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0')
+  }
+
+  // Formata minutos totais → "Xh Ymin" legível
+  function sessaoFmtMin(min) {
+    if (min < 1) return '0min'
+    const h = Math.floor(min / 60)
+    const m = min % 60
+    return h > 0 ? h + 'h ' + (m > 0 ? m + 'min' : '') : m + 'min'
+  }
+
+  // Atualiza o display do cronômetro a cada segundo
+  function sessaoTick() {
+    const elapsed = sessaoAtiva ? Math.floor((Date.now() - sessaoInicio) / 1000) : 0
+    const total   = sessaoAcumulado + elapsed
+    const el      = document.getElementById('sessao-timer-display')
+    if (el) el.textContent = sessaoFmt(total)
+  }
+
+  // Lê totais do Supabase (caderno_erros.time_spent) por escopo
+  async function sessaoLoadStats() {
+    const now   = new Date()
+    const today = new Date(now); today.setHours(0,0,0,0)
+    const dow   = now.getDay()
+    const weekStart = new Date(now); weekStart.setDate(now.getDate() - dow); weekStart.setHours(0,0,0,0)
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+
+    const [dData, wData, mData] = await Promise.all([
+      dbSelect('caderno_erros', `select=time_spent&user_id=eq.${currentUser.id}&created_at=gte.${encodeURIComponent(today.toISOString())}`),
+      dbSelect('caderno_erros', `select=time_spent&user_id=eq.${currentUser.id}&created_at=gte.${encodeURIComponent(weekStart.toISOString())}`),
+      dbSelect('caderno_erros', `select=time_spent&user_id=eq.${currentUser.id}&created_at=gte.${encodeURIComponent(monthStart.toISOString())}`)
+    ])
+
+    const sum = arr => Math.round((arr || []).reduce((a, e) => a + (e.time_spent || 0), 0) / 60)
+
+    // Soma o tempo da sessão ativa atual nos escopos
+    const sesMin = sessaoAtiva ? Math.floor((Date.now() - sessaoInicio) / 1000 / 60) : 0
+    const todayLocal = Math.round(parseInt(localStorage.getItem(SESSAO_KEY()) || '0') / 60)
+
+    const elH = document.getElementById('sessao-hoje')
+    const elW = document.getElementById('sessao-semana')
+    const elM = document.getElementById('sessao-mes')
+    if (elH) elH.textContent = sessaoFmtMin(sum(dData) + todayLocal)
+    if (elW) elW.textContent = sessaoFmtMin(sum(wData) + todayLocal)
+    if (elM) elM.textContent = sessaoFmtMin(sum(mData) + todayLocal)
+  }
+
+  // Inicia ou pausa a sessão
+  window.sessaoToggle = function() {
+    const btn = document.getElementById('sessao-btn')
+    const lbl = document.getElementById('sessao-materia-label')
+
+    if (!sessaoAtiva) {
+      // ── INICIAR ──
+      sessaoAtiva = true
+      sessaoInicio = Date.now()
+      // Recupera acumulado do localStorage para hoje
+      sessaoAcumulado = parseInt(localStorage.getItem(SESSAO_KEY()) || '0')
+      if (btn) {
+        btn.innerHTML = '⏸ Pausar sessão'
+        btn.style.background = 'var(--ink)'
+        btn.style.boxShadow  = '0 4px 14px rgba(26,24,20,.25)'
+      }
+      if (lbl) lbl.textContent = 'Sessão em andamento...'
+      sessaoInterval = setInterval(sessaoTick, 1000)
+      sessaoTick()
+    } else {
+      // ── PAUSAR ──
+      sessaoAtiva = false
+      clearInterval(sessaoInterval)
+      sessaoInterval = null
+      const elapsed = Math.floor((Date.now() - sessaoInicio) / 1000)
+      sessaoAcumulado += elapsed
+      sessaoInicio = null
+      // Salva no localStorage (segundos totais hoje)
+      localStorage.setItem(SESSAO_KEY(), String(sessaoAcumulado))
+      if (btn) {
+        btn.innerHTML = '▶ Iniciar sessão'
+        btn.style.background = 'var(--coral)'
+        btn.style.boxShadow  = '0 4px 14px rgba(232,66,10,.35)'
+      }
+      if (lbl) lbl.textContent = sessaoFmtMin(Math.round(sessaoAcumulado / 60)) + ' registrado hoje'
+      sessaoTick()
+      sessaoLoadStats()
+    }
+  }
+
+  // Inicializa os stats ao entrar na aba Hoje
+  function sessaoInit() {
+    // Recupera estado persistido (caso tenha pausado e navegado)
+    sessaoAcumulado = parseInt(localStorage.getItem(SESSAO_KEY()) || '0')
+    const lbl = document.getElementById('sessao-materia-label')
+    if (sessaoAcumulado > 0 && lbl && !sessaoAtiva) {
+      lbl.textContent = sessaoFmtMin(Math.round(sessaoAcumulado / 60)) + ' registrado hoje'
+    }
+    sessaoTick()
+    sessaoLoadStats()
   }
 
   // ── Carregar página de amigos ──────────────────────────────
