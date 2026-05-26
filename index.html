@@ -706,41 +706,6 @@ body {
       text-transform:uppercase;color:var(--muted);margin:.9rem 0 .4rem}
     .amigos-grid{display:flex;flex-direction:column;gap:.35rem}
 
-    /* ── PAINEL GLOSSÁRIO ──────────────────── */
-    #glossario-panel{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:95vw;
-      background:var(--surface);border-left:1px solid var(--border);z-index:300;
-      transform:translateX(100%);transition:transform .25s cubic-bezier(.4,0,.2,1);
-      display:flex;flex-direction:column;box-shadow:-4px 0 24px rgba(0,0,0,.14)}
-    #glossario-panel.open{transform:translateX(0)}
-    #glossario-overlay{position:fixed;inset:0;z-index:299;display:none;background:rgba(26,24,20,.25)}
-    #glossario-overlay.open{display:block}
-    .gp-header{padding:1rem 1.1rem .7rem;border-bottom:1px solid var(--border);flex-shrink:0}
-    .gp-title{font-weight:700;font-size:.95rem;color:var(--ink);margin-bottom:.6rem;
-      display:flex;justify-content:space-between;align-items:center}
-    .gp-add{padding:.7rem 1.1rem;border-bottom:1px solid var(--border);flex-shrink:0;
-      display:flex;flex-direction:column;gap:.45rem}
-    .gp-inp{width:100%;background:var(--surface2);border:1px solid var(--border);
-      border-radius:8px;padding:.4rem .7rem;color:var(--ink);font-size:.83rem;
-      font-family:'Geist',sans-serif;outline:none;transition:border-color .15s;box-sizing:border-box}
-    .gp-inp:focus{border-color:var(--coral)}
-    .gp-body{flex:1;overflow-y:auto;padding:.6rem .8rem}
-    .gp-empty{font-size:.82rem;color:var(--muted);text-align:center;padding:2rem 0}
-    .gp-term{border:1px solid var(--border);border-radius:9px;padding:.65rem .85rem;
-      margin-bottom:.4rem;background:var(--surface);transition:box-shadow .15s}
-    .gp-term:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
-    .gp-term-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.4rem}
-    .gp-term-word{font-weight:700;font-size:.88rem;color:var(--ink)}
-    .gp-term-sub{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
-      display:flex;align-items:center;gap:.3rem;margin-top:.1rem}
-    .gp-term-def{font-size:.81rem;color:var(--ink2);margin-top:.35rem;line-height:1.55}
-    .gp-del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.78rem;
-      padding:2px 5px;border-radius:5px;flex-shrink:0;transition:color .15s}
-    .gp-del-btn:hover{color:#c00}
-    .gp-search{width:100%;background:var(--surface2);border:1px solid var(--border);
-      border-radius:8px;padding:.38rem .7rem;color:var(--ink);font-size:.83rem;
-      font-family:'Geist',sans-serif;outline:none;transition:border-color .15s;box-sizing:border-box;margin-bottom:.5rem}
-    .gp-search:focus{border-color:var(--coral)}
-
     /* ── PAINEL DE FÓRMULAS ────────────────── */
     #formula-panel{position:fixed;top:0;right:0;height:100vh;width:340px;max-width:95vw;
       background:var(--surface);border-left:1px solid var(--border);z-index:300;
@@ -1023,7 +988,7 @@ body {
             <select id="fichas-subject" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;color:var(--ink);font-size:.83rem;font-family:'Geist',sans-serif;outline:none;min-width:140px" onchange="">
               <option value="">Matéria...</option>
             </select>
-            <button class="btn btn-ghost btn-sm" onclick="glossarioAbrir()" title="Glossário de termos">📖 Glossário</button>
+            <button class="btn btn-ghost btn-sm" onclick="abrirPainelFormulas()" title="Glossário de fórmulas">📐 Fórmulas</button>
             <button class="btn btn-coral btn-sm" onclick="document.getElementById('fichas-file-input').click()">📄 Importar</button>
             <input type="file" id="fichas-file-input" accept=".pdf,image/png,image/jpeg,image/webp" style="display:none" onchange="fichaFileSelected(event)">
           </div>
@@ -1142,11 +1107,23 @@ body {
 
         <!-- Busca -->
         <div class="amigos-section-title">🔍 Adicionar amigo</div>
-        <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <!-- Tabs de modo de busca -->
+        <div style="display:flex;gap:.3rem;margin-bottom:.55rem">
+          <button class="calc-period-tab active" id="search-tab-username" onclick="amigosSwitchSearch('username', this)">@Username</button>
+          <button class="calc-period-tab" id="search-tab-phone" onclick="amigosSwitchSearch('phone', this)">📱 Telefone</button>
+        </div>
+        <!-- Busca por username -->
+        <div id="amigos-search-username" style="display:flex;gap:.5rem;margin-bottom:.5rem">
           <input id="amigos-search-input" class="calc-inp-name" placeholder="@username do amigo"
             style="flex:1" onkeydown="if(event.key==='Enter') amigosBuscar()"
             oninput="this.value=this.value.replace(/[^a-z0-9_@]/gi,'').toLowerCase()">
           <button class="btn btn-coral btn-sm" onclick="amigosBuscar()">Buscar</button>
+        </div>
+        <!-- Busca por telefone -->
+        <div id="amigos-search-phone" style="display:none;flex;gap:.5rem;margin-bottom:.5rem">
+          <input id="amigos-phone-input" class="calc-inp-name" placeholder="+55 11 99999-9999"
+            style="flex:1" onkeydown="if(event.key==='Enter') amigosBuscarTelefone()">
+          <button class="btn btn-coral btn-sm" onclick="amigosBuscarTelefone()">Buscar</button>
         </div>
         <div id="amigos-search-result" class="amigos-grid" style="margin-bottom:.3rem"></div>
 
@@ -1207,26 +1184,6 @@ body {
     </div>
   </div>
 
-</div>
-
-<!-- PAINEL GLOSSÁRIO -->
-<div id="glossario-overlay" onclick="glossarioFechar()"></div>
-<div id="glossario-panel">
-  <div class="gp-header">
-    <div class="gp-title">
-      <span>📖 Glossário de Provas</span>
-      <button class="modal-close" onclick="glossarioFechar()">✕</button>
-    </div>
-    <input class="gp-search" id="gp-search" placeholder="Buscar termo..." oninput="glossarioFiltrar()">
-  </div>
-  <div class="gp-add">
-    <input class="gp-inp" id="gp-term-inp" placeholder="Termo (ex: Mitose)" onkeydown="if(event.key==='Enter') document.getElementById('gp-def-inp').focus()">
-    <textarea class="gp-inp" id="gp-def-inp" placeholder="Definição ou exemplo..." rows="2" style="resize:none;line-height:1.5" onkeydown="if(event.key==='Enter'&&event.ctrlKey) glossarioAdd()"></textarea>
-    <button class="btn btn-coral btn-sm" onclick="glossarioAdd()" style="align-self:flex-end">+ Adicionar</button>
-  </div>
-  <div class="gp-body" id="gp-body">
-    <div class="gp-empty">Nenhum termo ainda.<br>Adicione conceitos que você precisa memorizar.</div>
-  </div>
 </div>
 
 <!-- PAINEL DE FÓRMULAS -->
@@ -3815,101 +3772,6 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
   }
 
   // ══════════════════════════════════════════════════════════
-  //  GLOSSÁRIO
-  // ══════════════════════════════════════════════════════════
-  let glossarioData = []
-  let glossarioFiltroQuery = ''
-
-  window.glossarioAbrir = async function() {
-    document.getElementById('glossario-panel').classList.add('open')
-    document.getElementById('glossario-overlay').classList.add('open')
-    await glossarioCarregar()
-  }
-
-  window.glossarioFechar = function() {
-    document.getElementById('glossario-panel').classList.remove('open')
-    document.getElementById('glossario-overlay').classList.remove('open')
-  }
-
-  async function glossarioCarregar() {
-    // Pega matéria selecionada nas fichas (para filtrar)
-    const subjectEl = document.getElementById('fichas-subject')
-    const sid = subjectEl?.value || null
-    const query = sid
-      ? `select=*&user_id=eq.${currentUser.id}&subject_id=eq.${sid}&order=term.asc`
-      : `select=*&user_id=eq.${currentUser.id}&order=term.asc`
-    glossarioData = await dbSelect('glossario', query) || []
-    glossarioRender()
-  }
-
-  window.glossarioAdd = async function() {
-    const termInp = document.getElementById('gp-term-inp')
-    const defInp  = document.getElementById('gp-def-inp')
-    const term = termInp.value.trim()
-    const def  = defInp.value.trim()
-    if (!term) { termInp.focus(); return }
-
-    const subjectEl = document.getElementById('fichas-subject')
-    const subjectId = subjectEl?.value || null
-    const subjectName = subjectId ? (subjectEl.options[subjectEl.selectedIndex]?.text || '') : ''
-
-    const result = await dbInsert('glossario', {
-      user_id:    currentUser.id,
-      subject_id: subjectId,
-      term,
-      definition: def
-    })
-    if (result?.error) { notify('Erro ao salvar: ' + (result.error.message || '?')); return }
-
-    termInp.value = ''
-    defInp.value  = ''
-    termInp.focus()
-    await glossarioCarregar()
-    notify('✓ Termo adicionado!')
-  }
-
-  window.glossarioDelete = async function(id) {
-    await dbDelete('glossario', id)
-    glossarioData = glossarioData.filter(t => t.id !== id)
-    glossarioRender()
-  }
-
-  window.glossarioFiltrar = function() {
-    glossarioFiltroQuery = document.getElementById('gp-search').value.toLowerCase()
-    glossarioRender()
-  }
-
-  function glossarioRender() {
-    const body = document.getElementById('gp-body')
-    if (!body) return
-    const q = glossarioFiltroQuery
-    const lista = q
-      ? glossarioData.filter(t => t.term.toLowerCase().includes(q) || (t.definition || '').toLowerCase().includes(q))
-      : glossarioData
-
-    if (lista.length === 0) {
-      body.innerHTML = `<div class="gp-empty">${q ? 'Nenhum resultado para "'+escHtml(q)+'"' : 'Nenhum termo ainda.<br>Adicione conceitos que você precisa memorizar.'}</div>`
-      return
-    }
-
-    body.innerHTML = lista.map(t => {
-      const subj = subjects.find(s => s.id === t.subject_id)
-      const subjectLabel = subj ? `<span style="width:6px;height:6px;border-radius:50%;background:${subj.color};display:inline-block"></span> ${escHtml(subj.name)}` : ''
-      return `
-        <div class="gp-term">
-          <div class="gp-term-head">
-            <div>
-              <div class="gp-term-word">${escHtml(t.term)}</div>
-              ${subjectLabel ? `<div class="gp-term-sub">${subjectLabel}</div>` : ''}
-            </div>
-            <button class="gp-del-btn" onclick="glossarioDelete('${t.id}')" title="Apagar">✕</button>
-          </div>
-          ${t.definition ? `<div class="gp-term-def">${escHtml(t.definition)}</div>` : ''}
-        </div>`
-    }).join('')
-  }
-
-  // ══════════════════════════════════════════════════════════
   //  AMIGOS & PERFIL
   // ══════════════════════════════════════════════════════════
   let myProfile = null
@@ -4148,6 +4010,61 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
         <div class="amigo-info">
           <div class="amigo-name">${escHtml(p.display_name || p.username)}</div>
           <div class="amigo-username">@${escHtml(p.username)}</div>
+        </div>
+        ${action}
+      </div>`
+    }).join('')
+  }
+
+  // ── Switch busca username / telefone ──────────────────────
+  window.amigosSwitchSearch = function(mode, btn) {
+    document.querySelectorAll('#search-tab-username, #search-tab-phone').forEach(b => b.classList.remove('active'))
+    if (btn) btn.classList.add('active')
+    const usernameEl = document.getElementById('amigos-search-username')
+    const phoneEl    = document.getElementById('amigos-search-phone')
+    if (usernameEl) usernameEl.style.display = mode === 'username' ? 'flex' : 'none'
+    if (phoneEl)    phoneEl.style.display    = mode === 'phone'    ? 'flex' : 'none'
+    document.getElementById('amigos-search-result').innerHTML = ''
+  }
+
+  // ── Busca por telefone ─────────────────────────────────────
+  window.amigosBuscarTelefone = async function() {
+    const raw = document.getElementById('amigos-phone-input').value.trim()
+    const resultEl = document.getElementById('amigos-search-result')
+    if (!raw) { resultEl.innerHTML = ''; return }
+
+    // normaliza: mantém apenas dígitos e o + inicial
+    const normalized = raw.replace(/[\s\-\(\)\.]/g, '')
+
+    resultEl.innerHTML = `<div style="font-size:.84rem;color:var(--muted);padding:.4rem 0">Buscando...</div>`
+
+    const res = await dbSelect('profiles',
+      `select=*&phone=ilike.*${encodeURIComponent(normalized)}*&id=neq.${currentUser.id}`)
+
+    if (!res || !res.length) {
+      resultEl.innerHTML = `<div style="font-size:.84rem;color:var(--muted);padding:.4rem 0">Nenhum usuário encontrado com esse número.</div>`
+      return
+    }
+
+    const friendships = await dbSelect('friendships', 'select=*')
+    const myFriends = new Set()
+    const myPending = new Set()
+    friendships.forEach(f => {
+      const other = f.requester_id === currentUser.id ? f.addressee_id : f.requester_id
+      if (f.status === 'accepted') myFriends.add(other)
+      if (f.status === 'pending' && f.requester_id === currentUser.id) myPending.add(f.addressee_id)
+    })
+
+    resultEl.innerHTML = res.map(p => {
+      let action = ''
+      if (myFriends.has(p.id))       action = `<span style="font-size:.8rem;color:var(--green);font-weight:700">✓ Amigo</span>`
+      else if (myPending.has(p.id))  action = `<span style="font-size:.8rem;color:var(--muted)">Pedido enviado</span>`
+      else                           action = `<button class="btn btn-coral btn-sm" onclick="amigosEnviar('${p.id}', this)">+ Adicionar</button>`
+      return `<div class="amigo-card">
+        <div class="amigo-avatar">${(p.display_name||p.username||'?')[0].toUpperCase()}</div>
+        <div class="amigo-info">
+          <div class="amigo-name">${escHtml(p.display_name || p.username || '—')}</div>
+          <div class="amigo-username">@${escHtml(p.username || '...')}</div>
         </div>
         ${action}
       </div>`
