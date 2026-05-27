@@ -1019,15 +1019,23 @@ body {
 
     <!-- ── FICHAS ── -->
     <div id="page-fichas" class="page">
+      <!-- Overlay de drag & drop (M2.1) -->
+      <div id="fichas-drop-overlay" style="display:none;position:absolute;inset:0;z-index:50;
+        background:rgba(232,66,10,.13);border:3px dashed var(--coral);border-radius:16px;
+        pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:.5rem">
+        <div style="font-size:2.5rem">📄</div>
+        <div style="font-weight:800;color:var(--coral);font-size:1.1rem">Solte o PDF aqui</div>
+      </div>
       <div class="page-content" style="max-width:100%">
         <div class="ph" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem">
           <div>
             <div class="ph-eyebrow">Exercícios</div>
             <div class="ph-title">Fichas de Estudo</div>
-            <div class="ph-sub">Importe um PDF ou foto — cronometre cada questão e salve os erros.</div>
+            <div class="ph-sub">Importe um PDF ou foto — ou arraste direto para a tela.</div>
           </div>
           <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
-            <select id="fichas-subject" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;color:var(--ink);font-size:.83rem;font-family:'Geist',sans-serif;outline:none;min-width:140px" onchange="">
+            <select id="fichas-subject" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.35rem .7rem;color:var(--ink);font-size:.83rem;font-family:'Geist',sans-serif;outline:none;min-width:140px"
+              onchange="localStorage.setItem('cora_fichas_subject', this.value)">
               <option value="">Matéria...</option>
             </select>
             <button class="btn btn-ghost btn-sm" onclick="abrirPainelFormulas()" title="Glossário de fórmulas">📐 Fórmulas</button>
@@ -1042,7 +1050,7 @@ body {
         <div id="fichas-empty" style="text-align:center;padding:3.5rem 1rem;color:var(--muted)">
           <div style="font-size:3rem;margin-bottom:.8rem">📄</div>
           <div style="font-weight:700;color:var(--ink2);margin-bottom:.35rem">Nenhuma ficha carregada</div>
-          <div style="font-size:.85rem">Clique em "Importar" para carregar um PDF ou foto de exercícios</div>
+          <div style="font-size:.85rem">Clique em "Importar" ou <strong>arraste um PDF</strong> para cá</div>
         </div>
 
         <div id="fichas-viewer" style="display:none">
@@ -1057,9 +1065,9 @@ body {
                 <div id="fichas-overlay" style="display:none;position:absolute;border:2.5px dashed var(--coral);background:rgba(232,66,10,.1);pointer-events:none;border-radius:3px"></div>
               </div>
               <div id="fichas-nav" class="fichas-nav" style="display:none">
-                <button class="btn btn-ghost btn-sm" onclick="fichaPagePrev()">‹ Anterior</button>
-                <span style="font-size:.84rem;color:var(--ink2)" id="fichas-page-label">Pág 1 / 1</span>
-                <button class="btn btn-ghost btn-sm" onclick="fichaPageNext()">Próxima ›</button>
+                <button class="btn btn-ghost btn-sm" onclick="fichaPagePrev()" title="Página anterior">‹</button>
+                <div id="fichas-page-nums" style="display:flex;gap:.25rem;flex-wrap:wrap;justify-content:center;max-width:340px"></div>
+                <button class="btn btn-ghost btn-sm" onclick="fichaPageNext()" title="Próxima página">›</button>
               </div>
             </div>
             <!-- Painel lateral -->
@@ -3719,11 +3727,92 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     // ── Entrada da página ─────────────────────────────────────
     window.fichaPageInit = function() {
       initPdfJs()
+
+      // M2.4: popula select e restaura matéria salva no localStorage
       const sel = document.getElementById('fichas-subject')
-      if (subjects && subjects.length)
+      if (subjects && subjects.length) {
         sel.innerHTML = '<option value="">Matéria...</option>' +
           subjects.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('')
+        const saved = localStorage.getItem('cora_fichas_subject')
+        if (saved) sel.value = saved
+      }
+
+      // M2.1: drag & drop na área de fichas
+      const page = document.getElementById('page-fichas')
+      const overlay = document.getElementById('fichas-drop-overlay')
+      page.addEventListener('dragover', function(e) {
+        e.preventDefault()
+        overlay.style.display = 'flex'
+      })
+      page.addEventListener('dragleave', function(e) {
+        if (!page.contains(e.relatedTarget)) overlay.style.display = 'none'
+      })
+      page.addEventListener('drop', function(e) {
+        e.preventDefault()
+        overlay.style.display = 'none'
+        const file = e.dataTransfer.files[0]
+        if (!file) return
+        const ok = file.type === 'application/pdf' || file.type.startsWith('image/')
+        if (!ok) { notify('⚠️ Só PDF ou imagem é aceito'); return }
+        // M2.2: pede matéria antes de carregar
+        fichaAbrirModalMateria(file)
+      })
+
       renderLibrary()
+    }
+
+    // M2.2: modal que pergunta a matéria ao soltar um arquivo
+    function fichaAbrirModalMateria(file) {
+      // se já tem matéria selecionada, usa direto
+      const sel = document.getElementById('fichas-subject')
+      if (sel.value) { fichaCarregarFile(file); return }
+
+      const opts = subjects.map(s =>
+        `<option value="${s.id}">${escHtml(s.name)}</option>`).join('')
+      const modal = document.createElement('div')
+      modal.innerHTML = `
+        <div class="modal-overlay" onclick="this.parentNode.remove()"></div>
+        <div class="modal-box" style="max-width:360px">
+          <div class="modal-header">
+            <span>📄 De qual matéria é este arquivo?</span>
+            <button class="modal-close" onclick="this.closest('.modal-box').parentNode.remove()">✕</button>
+          </div>
+          <select id="fichas-drop-subject" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .7rem;color:var(--ink);font-size:.9rem;font-family:'Geist',sans-serif;outline:none;margin-bottom:1rem">
+            <option value="">Sem matéria específica</option>
+            ${opts}
+          </select>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end">
+            <button class="btn btn-ghost btn-sm" onclick="this.closest('.modal-box').parentNode.remove()">Cancelar</button>
+            <button class="btn btn-coral" id="fichas-drop-ok">Carregar →</button>
+          </div>
+        </div>`
+      document.body.appendChild(modal)
+      modal.querySelector('#fichas-drop-ok').onclick = function() {
+        const sid = modal.querySelector('#fichas-drop-subject').value
+        if (sid) {
+          sel.value = sid
+          localStorage.setItem('cora_fichas_subject', sid)
+        }
+        modal.remove()
+        fichaCarregarFile(file)
+      }
+    }
+
+    // Carrega um File diretamente (usado pelo drag&drop)
+    async function fichaCarregarFile(file) {
+      document.getElementById('fichas-empty').style.display  = 'none'
+      document.getElementById('fichas-viewer').style.display = 'block'
+      document.getElementById('fichas-filename').textContent = file.name
+      fichaTimerReset()
+      clearCrop()
+      const buf   = await file.arrayBuffer()
+      const fType = file.type === 'application/pdf' ? 'pdf' : 'image'
+      const savedId = await idbSave({name: file.name, type: fType, data: buf, mtype: file.type, totalPages: 0, lastPage: 1})
+      currentFichaId = savedId
+      if (fType === 'pdf') { isImage = false; await loadPdf(buf) }
+      else                 { isImage = true;  await loadImage(buf, file.type) }
+      await idbUpdateMeta(currentFichaId, {totalPages, lastPage: currentPage})
+      await renderLibrary()
     }
 
     // ── Importar novo arquivo ─────────────────────────────────
@@ -3838,8 +3927,25 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     }
 
     function updatePageLabel() {
-      document.getElementById('fichas-page-label').textContent =
-        `Pág ${currentPage} / ${totalPages || 1}`
+      // M2.3: botões numéricos de página
+      const nav     = document.getElementById('fichas-nav')
+      const numsEl  = document.getElementById('fichas-page-nums')
+      const total   = totalPages || 1
+      nav.style.display = total > 1 ? 'flex' : 'none'
+      if (!numsEl) return
+      // Máx 10 botões visíveis; mostra janela deslizante em volta da página atual
+      const MAX = 10
+      let start = Math.max(1, currentPage - Math.floor(MAX / 2))
+      let end   = Math.min(total, start + MAX - 1)
+      if (end - start < MAX - 1) start = Math.max(1, end - MAX + 1)
+      let html = ''
+      if (start > 1)     html += `<button class="btn btn-ghost btn-sm" style="padding:.2rem .4rem;min-width:28px" onclick="fichaGotoPage(1)">1</button><span style="color:var(--muted);align-self:center">…</span>`
+      for (let i = start; i <= end; i++) {
+        const active = i === currentPage ? 'background:var(--ink);color:#fff;' : ''
+        html += `<button class="btn btn-ghost btn-sm" style="padding:.2rem .4rem;min-width:28px;${active}" onclick="fichaGotoPage(${i})">${i}</button>`
+      }
+      if (end < total) html += `<span style="color:var(--muted);align-self:center">…</span><button class="btn btn-ghost btn-sm" style="padding:.2rem .4rem;min-width:28px" onclick="fichaGotoPage(${total})">${total}</button>`
+      numsEl.innerHTML = html
     }
 
     window.fichaGotoPage = async function(n) {
