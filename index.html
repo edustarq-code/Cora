@@ -654,6 +654,19 @@ body {
     .ficha-item-meta{font-size:.73rem;color:var(--muted)}
     .ficha-item-actions{display:flex;gap:.3rem;flex-shrink:0}
 
+    /* ── FICHAS — PASTAS POR MATÉRIA (M2.5) ─────────────── */
+    .fichas-lib-folder{margin-bottom:.3rem}
+    .fichas-lib-folder-hdr{display:flex;align-items:center;gap:.45rem;padding:.3rem .6rem;
+      border-radius:8px;cursor:pointer;transition:background .15s;user-select:none}
+    .fichas-lib-folder-hdr:hover{background:var(--surface2)}
+    .fichas-lib-folder-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .fichas-lib-folder-name{font-size:.8rem;font-weight:700;color:var(--ink);flex:1}
+    .fichas-lib-folder-count{font-size:.7rem;color:var(--muted);background:var(--surface2);
+      padding:1px 7px;border-radius:10px;flex-shrink:0}
+    .fichas-lib-folder-toggle{font-size:.68rem;color:var(--muted);flex-shrink:0;
+      display:inline-block;transition:transform .2s}
+    .fichas-lib-folder-items{padding-left:.9rem;padding-top:.2rem}
+
     /* ── CADERNO DE ERROS — NOTEBOOK LAYOUT ─────────────── */
     .caderno-notebook{display:flex;align-items:flex-start;min-height:100vh;gap:0}
     .caderno-shelf{width:210px;flex-shrink:0;border-right:1px solid var(--border);
@@ -3696,32 +3709,85 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       })
     }
 
-    // ── Biblioteca de fichas salvas ───────────────────────────
+    // ── Biblioteca de fichas salvas (M2.5 — pastas por matéria) ──
+    window.fichaFolderToggle = function(hdr) {
+      const body  = hdr.nextElementSibling
+      const arrow = hdr.querySelector('.fichas-lib-folder-toggle')
+      const open  = body.style.display !== 'none'
+      body.style.display = open ? 'none' : 'block'
+      if (arrow) arrow.style.transform = open ? 'rotate(-90deg)' : 'rotate(0deg)'
+    }
+
     async function renderLibrary() {
       const all  = await idbGetAll()
       const wrap = document.getElementById('fichas-library')
       if (!all.length) { wrap.style.display = 'none'; return }
       wrap.style.display = 'block'
-      wrap.innerHTML = `
-        <div style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.45rem">📚 Fichas salvas</div>
-        <div class="fichas-lib-list">
-          ${all.map(f => {
-            const dt  = new Date(f.savedAt).toLocaleDateString('pt-BR')
-            const pgs = f.totalPages > 1 ? ` · ${f.totalPages} págs` : ''
-            const act = f.id === currentFichaId ? ' ficha-item-active' : ''
-            return `<div class="ficha-item${act}" id="fichaitem-${f.id}">
-              <span class="ficha-item-icon">${f.type==='pdf'?'📄':'🖼️'}</span>
-              <div class="ficha-item-info">
-                <div class="ficha-item-name" title="${escHtml(f.name)}">${escHtml(f.name)}</div>
-                <div class="ficha-item-meta">${dt}${pgs}</div>
-              </div>
-              <div class="ficha-item-actions">
-                <button class="btn btn-coral btn-sm" onclick="fichaCarregar(${f.id})">Abrir</button>
-                <button class="btn btn-ghost btn-sm" onclick="fichaApagarLib(${f.id})" title="Apagar">✕</button>
-              </div>
-            </div>`
-          }).join('')}
+
+      // Agrupa por matéria
+      const groups = {}
+      all.forEach(f => {
+        const sid = f.subjectId || '__sem__'
+        if (!groups[sid]) {
+          const subj = subjects.find(s => s.id === sid)
+          groups[sid] = {
+            name:  sid === '__sem__' ? 'Sem matéria' : (f.subjectName || subj?.name || 'Sem matéria'),
+            color: subj?.color || '#aaa',
+            items: []
+          }
+        }
+        groups[sid].items.push(f)
+      })
+
+      // Ordena: matérias A-Z, "Sem matéria" no final
+      const sorted = Object.entries(groups).sort(([a, ga], [b, gb]) => {
+        if (a === '__sem__') return 1
+        if (b === '__sem__') return -1
+        return ga.name.localeCompare(gb.name, 'pt')
+      })
+
+      const singleGroup = sorted.length === 1
+
+      const groupsHtml = sorted.map(([sid, g]) => {
+        const hasActive = g.items.some(f => f.id === currentFichaId)
+        const isOpen    = singleGroup || hasActive
+        const arrow     = isOpen ? 'rotate(0deg)' : 'rotate(-90deg)'
+        const display   = isOpen ? 'block' : 'none'
+        const dotHtml   = sid !== '__sem__'
+          ? `<div class="fichas-lib-folder-dot" style="background:${g.color}"></div>`
+          : `<span style="font-size:.78rem;line-height:1">📁</span>`
+        const itemsHtml = g.items.map(f => {
+          const dt  = new Date(f.savedAt).toLocaleDateString('pt-BR')
+          const pgs = f.totalPages > 1 ? ` · ${f.totalPages} págs` : ''
+          const act = f.id === currentFichaId ? ' ficha-item-active' : ''
+          return `<div class="ficha-item${act}" id="fichaitem-${f.id}">
+            <span class="ficha-item-icon">${f.type==='pdf'?'📄':'🖼️'}</span>
+            <div class="ficha-item-info">
+              <div class="ficha-item-name" title="${escHtml(f.name)}">${escHtml(f.name)}</div>
+              <div class="ficha-item-meta">${dt}${pgs}</div>
+            </div>
+            <div class="ficha-item-actions">
+              <button class="btn btn-coral btn-sm" onclick="fichaCarregar(${f.id})">Abrir</button>
+              <button class="btn btn-ghost btn-sm" onclick="fichaApagarLib(${f.id})" title="Apagar">✕</button>
+            </div>
+          </div>`
+        }).join('')
+        return `<div class="fichas-lib-folder">
+          <div class="fichas-lib-folder-hdr" onclick="fichaFolderToggle(this)">
+            ${dotHtml}
+            <span class="fichas-lib-folder-name">${escHtml(g.name)}</span>
+            <span class="fichas-lib-folder-count">${g.items.length}</span>
+            <span class="fichas-lib-folder-toggle" style="transform:${arrow}">▾</span>
+          </div>
+          <div class="fichas-lib-folder-items" style="display:${display}">
+            <div class="fichas-lib-list">${itemsHtml}</div>
+          </div>
         </div>`
+      }).join('')
+
+      wrap.innerHTML = `
+        <div style="font-size:.72rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem">📚 Fichas salvas</div>
+        ${groupsHtml}`
     }
 
     // ── Entrada da página ─────────────────────────────────────
@@ -3807,7 +3873,11 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       clearCrop()
       const buf   = await file.arrayBuffer()
       const fType = file.type === 'application/pdf' ? 'pdf' : 'image'
-      const savedId = await idbSave({name: file.name, type: fType, data: buf, mtype: file.type, totalPages: 0, lastPage: 1})
+      // M2.5: captura matéria selecionada para pasta automática
+      const subElD = document.getElementById('fichas-subject')
+      const subIdD = subElD.value || null
+      const subNameD = subIdD ? (subElD.options[subElD.selectedIndex]?.text || '') : ''
+      const savedId = await idbSave({name: file.name, type: fType, data: buf, mtype: file.type, totalPages: 0, lastPage: 1, subjectId: subIdD, subjectName: subNameD})
       currentFichaId = savedId
       if (fType === 'pdf') { isImage = false; await loadPdf(buf) }
       else                 { isImage = true;  await loadImage(buf, file.type) }
@@ -3831,8 +3901,12 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       const fType = file.type === 'application/pdf' ? 'pdf' : 'image'
       const mtype = file.type
 
+      // M2.5: captura matéria selecionada para pasta automática
+      const subElF = document.getElementById('fichas-subject')
+      const subIdF = subElF.value || null
+      const subNameF = subIdF ? (subElF.options[subElF.selectedIndex]?.text || '') : ''
       // salva no IndexedDB antes de renderizar
-      const savedId = await idbSave({name: file.name, type: fType, data: buf, mtype, totalPages: 0, lastPage: 1})
+      const savedId = await idbSave({name: file.name, type: fType, data: buf, mtype, totalPages: 0, lastPage: 1, subjectId: subIdF, subjectName: subNameF})
       currentFichaId = savedId
 
       if (fType === 'pdf') { isImage = false; await loadPdf(buf) }
