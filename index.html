@@ -585,6 +585,14 @@ body {
       font-size:.79rem;font-weight:600;outline:none;min-width:18px;max-width:58px;
       text-align:center;cursor:text;padding:0}
 
+    /* ── CONFIGURAÇÕES ──────────────────────────────────── */
+    .cfg-nav-row{display:flex;align-items:center;gap:.6rem;padding:.45rem .7rem;border-radius:8px;
+      font-size:.86rem;color:var(--ink2);cursor:pointer;transition:background .12s}
+    .cfg-nav-row:hover{background:var(--surface2)}
+    .cfg-nav-row input[type=checkbox]{width:15px;height:15px;accent-color:var(--coral);cursor:pointer;flex-shrink:0}
+    .cfg-track-on{background:var(--coral)!important}
+    .cfg-knob-on{left:19px!important}
+
     /* ── SIDEBAR RETRÁTIL (M4.2) ────────────────────────── */
     .sidebar{transition:width .22s ease;overflow:hidden}
     .sidebar.collapsed{width:62px}
@@ -811,29 +819,29 @@ body {
       <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Recolher menu">←</button>
     </div>
 
-    <div class="sidebar-section">Estudos</div>
-    <button class="nav-item active" onclick="goTo('hoje', this)">
+    <div class="sidebar-section" id="sidebar-sec-estudos">Estudos</div>
+    <button class="nav-item active" id="nav-hoje" onclick="goTo('hoje', this)">
       <span class="nav-icon">⊞</span> Hoje
     </button>
-    <button class="nav-item" onclick="goTo('cronograma', this)">
+    <button class="nav-item" id="nav-cronograma" onclick="goTo('cronograma', this)">
       <span class="nav-icon">📅</span> Cronograma
     </button>
-    <button class="nav-item" onclick="goTo('materias', this)">
+    <button class="nav-item" id="nav-materias" onclick="goTo('materias', this)">
       <span class="nav-icon">📚</span> Matérias
     </button>
-    <button class="nav-item" onclick="goTo('formulas', this)">
+    <button class="nav-item" id="nav-formulas" onclick="goTo('formulas', this)">
       <span class="nav-icon">⚗</span> Fórmulas
     </button>
 
-    <div class="sidebar-section">Exercícios</div>
-    <button class="nav-item" onclick="goTo('fichas', this)">
+    <div class="sidebar-section" id="sidebar-sec-exercicios">Exercícios</div>
+    <button class="nav-item" id="nav-fichas" onclick="goTo('fichas', this)">
       <span class="nav-icon">📄</span> Fichas
     </button>
-    <button class="nav-item" onclick="goTo('caderno', this)">
+    <button class="nav-item" id="nav-caderno" onclick="goTo('caderno', this)">
       <span class="nav-icon">📕</span> Caderno de Erros
     </button>
 
-    <div class="sidebar-section">Social</div>
+    <div class="sidebar-section" id="sidebar-sec-social">Social</div>
     <button class="nav-item" id="nav-amigos" onclick="goTo('amigos', this)">
       <span class="nav-icon">👥</span> Amigos
     </button>
@@ -847,6 +855,9 @@ body {
           <span style="font-size:.72rem;color:var(--muted)">de estudo</span>
         </div>
       </div>
+      <button class="nav-item" onclick="abrirConfiguracoes()" style="margin-bottom:.3rem">
+        <span class="nav-icon">⚙</span> Configurações
+      </button>
       <div class="user-card" onclick="abrirPerfil()">
         <div class="avatar" id="sidebar-avatar">?</div>
         <div class="user-info">
@@ -1467,6 +1478,47 @@ body {
   </div>
 </div>
 
+<!-- MODAL DE CONFIGURAÇÕES -->
+<div id="config-modal" style="display:none">
+  <div class="modal-overlay" onclick="fecharConfiguracoes()"></div>
+  <div class="modal-box" style="max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <span>⚙️ Configurações</span>
+      <button class="modal-close" onclick="fecharConfiguracoes()">✕</button>
+    </div>
+
+    <!-- Seção cronômetro -->
+    <div style="font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.6rem">⏱ Cronômetro</div>
+    <label style="display:flex;align-items:center;gap:.75rem;padding:.65rem .8rem;border-radius:10px;
+      background:var(--surface2);border:1px solid var(--border);cursor:pointer;margin-bottom:.9rem"
+      onclick="cfgToggle('pomodoroMode',this)">
+      <div style="flex:1">
+        <div style="font-size:.87rem;font-weight:600;color:var(--ink)">Modo Pomodoro</div>
+        <div style="font-size:.74rem;color:var(--muted);margin-top:.1rem">Inicia o Pomodoro automaticamente ao começar uma sessão</div>
+      </div>
+      <div id="cfg-track-pomodoroMode" style="width:38px;height:22px;border-radius:11px;background:var(--border);
+        position:relative;transition:background .2s;flex-shrink:0;pointer-events:none">
+        <div style="position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+          background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)"></div>
+      </div>
+    </label>
+
+    <!-- Seção menu lateral -->
+    <div style="font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem">📌 Menu lateral</div>
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:.7rem">Escolha quais itens aparecem no menu lateral. "Hoje" sempre fica visível.</div>
+    <div style="display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem">
+      <label class="cfg-nav-row"><input type="checkbox" id="cfgnav-cronograma" checked onchange="cfgNavChange()"> 📅 Cronograma</label>
+      <label class="cfg-nav-row"><input type="checkbox" id="cfgnav-materias"   checked onchange="cfgNavChange()"> 📚 Matérias</label>
+      <label class="cfg-nav-row"><input type="checkbox" id="cfgnav-formulas"   checked onchange="cfgNavChange()"> ⚗ Fórmulas</label>
+      <label class="cfg-nav-row"><input type="checkbox" id="cfgnav-fichas"     checked onchange="cfgNavChange()"> 📄 Fichas</label>
+      <label class="cfg-nav-row"><input type="checkbox" id="cfgnav-caderno"    checked onchange="cfgNavChange()"> 📕 Caderno de Erros</label>
+      <label class="cfg-nav-row"><input type="checkbox" id="cfgnav-amigos"     checked onchange="cfgNavChange()"> 👥 Amigos</label>
+    </div>
+
+    <button class="btn btn-coral" style="width:100%" onclick="saveConfiguracoes()">Salvar →</button>
+  </div>
+</div>
+
 <!-- MODAL DE IMPORTAÇÃO -->
 <div id="import-modal" style="display:none">
   <div class="modal-overlay" onclick="fecharImportModal()"></div>
@@ -1548,7 +1600,10 @@ body {
   function loginGoogle() {
     db.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: 'https://cora-lyart.vercel.app/' }
+      options: {
+        redirectTo: 'https://cora-lyart.vercel.app/',
+        queryParams: { prompt: 'select_account' }
+      }
     })
   }
 
@@ -1572,6 +1627,72 @@ body {
     if (sidebar) sidebar.classList.add('collapsed')
     if (main)    main.classList.add('sidebar-collapsed')
     if (btn)     btn.textContent = '→'
+  }
+
+  // ── Configurações ────────────────────────────────────────────
+  function _getCfg() {
+    return JSON.parse(localStorage.getItem(`cora_config_${currentUser?.id}`) || '{}')
+  }
+  function _saveCfg(cfg) {
+    localStorage.setItem(`cora_config_${currentUser?.id}`, JSON.stringify(cfg))
+  }
+
+  function abrirConfiguracoes() {
+    const cfg = _getCfg()
+    // Atualiza toggle Pomodoro
+    const track = document.getElementById('cfg-track-pomodoroMode')
+    if (track) {
+      track.classList.toggle('cfg-track-on', !!cfg.pomodoroMode)
+      const knob = track.querySelector('div')
+      if (knob) knob.style.left = cfg.pomodoroMode ? '19px' : '3px'
+    }
+    // Preenche checkboxes do menu lateral
+    const hideList = cfg.hideNav || []
+    ;['cronograma','materias','formulas','fichas','caderno','amigos'].forEach(id => {
+      const cb = document.getElementById(`cfgnav-${id}`)
+      if (cb) cb.checked = !hideList.includes(id)
+    })
+    document.getElementById('config-modal').style.display = 'flex'
+  }
+
+  function fecharConfiguracoes() {
+    document.getElementById('config-modal').style.display = 'none'
+  }
+
+  function cfgToggle(key) {
+    const cfg = _getCfg()
+    cfg[key] = !cfg[key]
+    _saveCfg(cfg)
+    const track = document.getElementById(`cfg-track-${key}`)
+    if (track) {
+      track.classList.toggle('cfg-track-on', !!cfg[key])
+      const knob = track.querySelector('div')
+      if (knob) knob.style.left = cfg[key] ? '19px' : '3px'
+    }
+  }
+
+  function cfgNavChange() { /* live preview — checkboxes já mostram estado visual */ }
+
+  function saveConfiguracoes() {
+    const cfg = _getCfg()
+    cfg.hideNav = ['cronograma','materias','formulas','fichas','caderno','amigos']
+      .filter(id => {
+        const cb = document.getElementById(`cfgnav-${id}`)
+        return cb && !cb.checked
+      })
+    _saveCfg(cfg)
+    applyNavConfig()
+    fecharConfiguracoes()
+    notify('✓ Configurações salvas')
+  }
+
+  function applyNavConfig() {
+    const cfg = _getCfg()
+    const hideList = cfg.hideNav || []
+    ;['cronograma','materias','formulas','fichas','caderno','amigos'].forEach(id => {
+      const el = document.getElementById(`nav-${id}`)
+      if (el) el.style.display = hideList.includes(id) ? 'none' : ''
+    })
   }
 
   // ── Gerenciamento de conta ────────────────────────────────────
@@ -1684,6 +1805,7 @@ body {
     sessaoInit()          // inicializa cronômetro de sessão
     timerShow()           // mostra Pomodoro flutuante
     initSidebarState()    // restaura estado da sidebar (retrátil M4.2)
+    applyNavConfig()      // aplica itens ocultos do menu (Configurações)
     await loadPrivacyBlocks()  // carrega lista de bloqueios de privacidade (M1.4)
     _presenceInit()            // conecta canal Realtime Presence (M1.3)
   }
@@ -4855,8 +4977,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       const ico = document.getElementById('timer-bubble-icon')
       if (ico) ico.textContent = '⏸'
 
-      // Parear com Pomodoro: inicia automaticamente se não estiver rodando
-      if (!timerRunning) startTimer()
+      // Modo Pomodoro opcional — só pareia se ativado nas Configurações
+      if (_getCfg().pomodoroMode && !timerRunning) startTimer()
 
       // Atualiza self-card de amigos (badge Ao Vivo)
       if (document.getElementById('page-amigos')?.classList.contains('active')) amigosAtualizarSelfCard()
@@ -4881,9 +5003,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
 
       const el = document.getElementById('sessao-timer-display')
       if (el) el.textContent = sessaoFmt(total)
-      // Parar Pomodoro junto com a sessão
-      if (timerRunning) pauseTimer()
-      resetTimer()
+      // Para Pomodoro junto com a sessão (só se modo Pomodoro estiver ativo)
+      if (_getCfg().pomodoroMode && timerRunning) { pauseTimer(); resetTimer() }
       // Bolha flutuante: desativa coral, mostra total do dia, ícone de play
       const bubbleEl = document.getElementById('timer-display')
       if (bubbleEl) bubbleEl.textContent = sessaoFmt(total)
