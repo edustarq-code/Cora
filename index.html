@@ -12,13 +12,7 @@
   <meta name="theme-color" content="#1a1814">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <style>
-/* ── base.css (inline) ─── */
 /* ============================================================
    CORA — Base CSS
    ============================================================ */
@@ -172,6 +166,7 @@ body {
 .page { display: none; }
 .page.active { display: block; animation: fadeIn .2s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes pulseGreen { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(1.4); } }
 
 /* ── PAGE HEADER ── */
 .ph { margin-bottom: 1.8rem; }
@@ -506,6 +501,11 @@ body {
 }
 
 </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <style>
     /* ── MODAL ─────────────────────────────── */
     .modal-overlay{position:fixed;inset:0;background:rgba(26,24,20,.55);z-index:200;backdrop-filter:blur(2px)}
@@ -1137,15 +1137,43 @@ body {
           <div class="ph-sub">Adicione amigos pelo @username e acompanhe quem estuda com você.</div>
         </div>
 
-        <!-- Meu username -->
-        <div class="card" style="padding:.85rem 1rem;display:flex;align-items:center;gap:.85rem;margin-bottom:.2rem">
-          <div class="amigo-avatar" id="amigos-my-avatar" style="background:var(--ink)">?</div>
-          <div>
-            <div style="font-size:.73rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.06em">Seu username</div>
-            <div style="font-weight:700;font-size:1rem;color:var(--ink)" id="amigos-my-username">—</div>
+        <!-- CARD DE AUTOPERFIL -->
+        <div id="amigos-self-card" style="margin-bottom:1.1rem;border-radius:18px;overflow:hidden;
+          background:linear-gradient(135deg,#1a1814 0%,#2d2820 100%);
+          border:1px solid var(--border);box-shadow:0 4px 20px rgba(26,24,20,.18)">
+          <!-- Linha principal: avatar + nome + status -->
+          <div style="padding:1rem 1.1rem .7rem;display:flex;align-items:center;gap:.9rem">
+            <div id="amigos-self-avatar"
+              style="width:56px;height:56px;border-radius:50%;
+                background:linear-gradient(135deg,var(--coral),var(--amber));
+                display:flex;align-items:center;justify-content:center;
+                font-size:1.6rem;font-weight:700;color:#fff;
+                flex-shrink:0;overflow:hidden;border:2px solid rgba(255,255,255,.12)">?</div>
+            <div style="flex:1;min-width:0">
+              <div id="amigos-self-name" style="font-weight:800;font-size:1rem;color:#fff;
+                overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Você</div>
+              <div id="amigos-self-username" style="font-size:.78rem;color:rgba(255,255,255,.5);margin-top:.05rem">—</div>
+              <div id="amigos-self-status" style="margin-top:.3rem;min-height:1.1em"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" style="flex-shrink:0;font-size:.75rem;border-color:rgba(255,255,255,.15);color:rgba(255,255,255,.55)"
+              onclick="amigosMudarUsername()">Editar</button>
           </div>
-          <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="amigosMudarUsername()">Editar</button>
+          <!-- Stats: hoje + semana -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid rgba(255,255,255,.08)">
+            <div style="padding:.65rem .5rem;text-align:center;border-right:1px solid rgba(255,255,255,.08)">
+              <div id="amigos-self-hoje" style="font-size:1.35rem;font-weight:900;color:var(--coral)">—</div>
+              <div style="font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:.1rem">Hoje</div>
+            </div>
+            <div style="padding:.65rem .5rem;text-align:center">
+              <div id="amigos-self-semana" style="font-size:1.35rem;font-weight:900;color:var(--coral)">—</div>
+              <div style="font-size:.6rem;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:.1rem">Esta semana</div>
+            </div>
+          </div>
         </div>
+
+        <!-- Meu username (hidden — dados migrados para card acima) -->
+        <div id="amigos-my-avatar" style="display:none">?</div>
+        <div id="amigos-my-username" style="display:none">—</div>
 
         <!-- Busca -->
         <div class="amigos-section-title">🔍 Adicionar amigo</div>
@@ -1569,6 +1597,8 @@ body {
     calcWeeklyHours()     // exibe horas semanais na sidebar
     sessaoInit()          // inicializa cronômetro de sessão
     timerShow()           // mostra Pomodoro flutuante
+    await loadPrivacyBlocks()  // carrega lista de bloqueios de privacidade (M1.4)
+    _presenceInit()            // conecta canal Realtime Presence (M1.3)
   }
 
   // ── Navegação ────────────────────────────────────────────────
@@ -2109,16 +2139,63 @@ body {
       lista.innerHTML = '<div class="empty-state">Nenhuma tarefa ainda. Clique em uma matéria acima!</div>'
       return
     }
-    lista.innerHTML = tarefas.map(t => `
-      <div class="tarefa-item ${t.status === 'done' ? 'done' : ''}" onclick="toggleTarefa('${t.id}', '${t.status}', this)">
-        <div class="tarefa-cb ${t.status === 'done' ? 'done' : ''}">${t.status === 'done' ? '✓' : ''}</div>
-        <div class="tarefa-info">
-          <div class="tarefa-label ${t.status === 'done' ? 'done' : ''}">${t.study_goal}</div>
-          ${t.subjects ? `<div class="tarefa-sub">${t.subjects.icon || ''} ${t.subjects.name}</div>` : '<div class="tarefa-sub">Tarefa livre</div>'}
-        </div>
-        ${t.status === 'done' ? '<span class="chip chip-green">Feito</span>' : ''}
-      </div>
-    `).join('')
+    lista.innerHTML = tarefas.map(t => {
+      const isAtiva    = sessaoTarefaAtiva?.tarefaId === t.id
+      const subjectId  = t.subjects?.id   || ''
+      const subjectName = t.subjects?.name || 'Livre'
+      const timeSpent  = t.time_spent > 0 ? `<span style="font-size:.7rem;color:var(--muted);margin-left:.3rem">(${sessaoFmtMin(Math.round(t.time_spent/60))})</span>` : ''
+      return `
+        <div class="tarefa-item ${t.status === 'done' ? 'done' : ''} ${isAtiva ? 'tarefa-ativa' : ''}"
+          style="${isAtiva ? 'border-color:var(--coral);background:var(--coral-soft)' : ''}">
+          <div onclick="toggleTarefa('${t.id}', '${t.status}', this)" style="display:flex;align-items:center;gap:.6rem;flex:1;cursor:pointer;min-width:0">
+            <div class="tarefa-cb ${t.status === 'done' ? 'done' : ''}">${t.status === 'done' ? '✓' : ''}</div>
+            <div class="tarefa-info">
+              <div class="tarefa-label ${t.status === 'done' ? 'done' : ''}">${escHtml(t.study_goal)}${timeSpent}</div>
+              ${t.subjects
+                ? `<div class="tarefa-sub" style="display:flex;align-items:center;gap:.3rem">
+                    <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${t.subjects.color||'var(--coral)'}"></span>
+                    ${escHtml(t.subjects.name)}</div>`
+                : '<div class="tarefa-sub">Tarefa livre</div>'}
+            </div>
+          </div>
+          ${t.status !== 'done'
+            ? `<button class="btn btn-sm ${isAtiva ? 'btn-coral' : 'btn-ghost'}" style="flex-shrink:0;font-size:.75rem"
+                onclick="selecionarTarefaParaEstudar('${t.id}','${subjectId}','${subjectName.replace(/'/g,"\\'")}',this)">
+                ${isAtiva ? '⏱ Ativa' : '▶ Estudar'}</button>`
+            : '<span class="chip chip-green" style="flex-shrink:0">Feito</span>'}
+        </div>`
+    }).join('')
+  }
+
+  // Seleciona tarefa como ativa e inicia sessão de estudos
+  window.selecionarTarefaParaEstudar = function(tarefaId, subjectId, subjectName, btn) {
+    // Se clicar na já ativa, apenas faz scroll para o card
+    if (sessaoTarefaAtiva?.tarefaId === tarefaId) {
+      document.getElementById('sessao-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      return
+    }
+
+    // Definir tarefa ativa
+    sessaoTarefaAtiva = { tarefaId, subjectId, subjectName }
+
+    // Atualizar label no card de sessão
+    const lbl = document.getElementById('sessao-materia-label')
+    if (lbl) lbl.textContent = `📌 ${subjectName}`
+
+    // Re-renderizar lista para refletir nova tarefa ativa
+    const today   = new Date().toISOString().split('T')[0]
+    dbSelect('daily_sessions', `select=*,subjects(name,color,id)&date=eq.${today}`)
+      .then(t => renderTarefas(Array.isArray(t) ? t : []))
+
+    // Scroll suave para o card de sessão
+    document.getElementById('sessao-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+    // Iniciar sessão automaticamente se não estiver rodando
+    if (!sessaoAtiva) {
+      setTimeout(() => sessaoToggle(), 350)
+    }
+
+    notify(`📚 Estudando: ${subjectName}`)
   }
 
   async function toggleTarefa(id, status, el) {
@@ -4291,10 +4368,117 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
   // ══════════════════════════════════════════════════════════
   // ── CRONÔMETRO DE SESSÃO DE ESTUDOS ────────────────────────
   // ══════════════════════════════════════════════════════════
-  let sessaoAtiva     = false
-  let sessaoInicio    = null    // timestamp ms quando iniciou
-  let sessaoInterval  = null
-  let sessaoDbId      = null    // id do registro em study_sessions (se tabela existir)
+  let sessaoAtiva       = false
+  let sessaoInicio      = null    // timestamp ms quando iniciou
+  let sessaoInterval    = null
+  let sessaoDbId        = null    // id do registro em study_sessions (se tabela existir)
+  let sessaoTarefaAtiva = null    // { tarefaId, subjectId, subjectName } — tarefa selecionada
+
+  // ── REALTIME PRESENCE (M1.3) + PRIVACIDADE GRANULAR (M1.4) ──
+  let _presenceChannel  = null
+  let friendPresenceMap = {}   // { userId: { subject_name, started_at } } — apenas quem está estudando E não me ocultou
+  let myPrivacyBlocks   = new Set()  // IDs de amigos que não podem ver meus dados
+
+  // Carrega minha lista de bloqueios do Supabase
+  async function loadPrivacyBlocks() {
+    try {
+      const rows = await dbSelect('privacy_blocks', `select=blocked_user_id&user_id=eq.${currentUser.id}`)
+      myPrivacyBlocks = new Set((rows || []).map(r => r.blocked_user_id))
+    } catch (_) { myPrivacyBlocks = new Set() }
+  }
+
+  // Alterna bloqueio de privacidade para um amigo (M1.4)
+  window.amigosToggleBlock = async function(friendId, btn) {
+    const isBlocked = myPrivacyBlocks.has(friendId)
+    if (isBlocked) {
+      await fetch(`${API}/privacy_blocks?user_id=eq.${currentUser.id}&blocked_user_id=eq.${friendId}`, {
+        method: 'DELETE',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + currentSession.access_token }
+      })
+      myPrivacyBlocks.delete(friendId)
+    } else {
+      await dbInsert('privacy_blocks', { user_id: currentUser.id, blocked_user_id: friendId })
+      myPrivacyBlocks.add(friendId)
+    }
+    // Re-transmite presence com hidden_from atualizado
+    _presenceTrack()
+    // Atualiza botão visualmente
+    if (btn) {
+      const nowBlocked = myPrivacyBlocks.has(friendId)
+      btn.textContent = nowBlocked ? '🔒' : '🔓'
+      btn.title       = nowBlocked ? 'Seus dados estão ocultos para este amigo (clique para revelar)' : 'Ocultar meus dados para este amigo'
+      btn.style.opacity = nowBlocked ? '1' : '0.45'
+    }
+    notify(myPrivacyBlocks.has(friendId) ? '🔒 Dados ocultados para este amigo' : '🔓 Dados visíveis para este amigo')
+  }
+
+  function _presenceInit() {
+    if (_presenceChannel) return
+    _presenceChannel = db.channel('study-presence', {
+      config: { presence: { key: currentUser.id } }
+    })
+    _presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const state = _presenceChannel.presenceState()
+        friendPresenceMap = {}
+        Object.entries(state).forEach(([uid, presences]) => {
+          if (uid === currentUser.id) return   // ignora o próprio usuário
+          const p = presences[0]
+          if (!p) return
+          // M1.4: se este amigo me ocultou, não exibo o status dele (privacidade mútua de exibição)
+          const hiddenFromMe = Array.isArray(p.hidden_from) && p.hidden_from.includes(currentUser.id)
+          if (hiddenFromMe) return
+          // Só adiciona ao mapa se estiver estudando
+          if (p.is_studying) {
+            friendPresenceMap[uid] = { subject_name: p.subject_name || '', started_at: p.started_at }
+          }
+        })
+        // Atualiza badges sem re-renderizar tudo
+        if (document.getElementById('page-amigos')?.classList.contains('active')) {
+          const listEl = document.getElementById('amigos-list')
+          if (listEl && listEl.children.length > 0) _amigosUpdatePresenceBadges()
+        }
+      })
+      .subscribe(async status => {
+        // Quando conectado, transmite estado imediatamente (mesmo em repouso)
+        if (status === 'SUBSCRIBED') _presenceTrack()
+      })
+  }
+
+  function _presenceTrack() {
+    if (!_presenceChannel) return
+    _presenceChannel.track({
+      user_id:      currentUser.id,
+      is_studying:  sessaoAtiva,
+      subject_name: sessaoAtiva ? (sessaoTarefaAtiva?.subjectName || '') : '',
+      started_at:   sessaoAtiva && sessaoInicio ? new Date(sessaoInicio).toISOString() : null,
+      hidden_from:  [...myPrivacyBlocks]   // lista de IDs que não podem ver meus dados
+    })
+  }
+
+  function _presenceUntrack() {
+    _presenceChannel?.untrack()
+  }
+
+  // Atualiza badges "AO VIVO" nos cards de amigos sem re-renderizar tudo
+  function _amigosUpdatePresenceBadges() {
+    const listEl = document.getElementById('amigos-list')
+    if (!listEl) return
+    listEl.querySelectorAll('[data-friend-id]').forEach(card => {
+      const fid    = card.dataset.friendId
+      const badge  = card.querySelector('.presence-badge')
+      const online = friendPresenceMap[fid]
+      if (badge) {
+        if (online) {
+          badge.style.display = 'inline-flex'
+          badge.querySelector('.presence-label').textContent =
+            online.subject_name ? `AO VIVO · ${online.subject_name}` : 'AO VIVO'
+        } else {
+          badge.style.display = 'none'
+        }
+      }
+    })
+  }
 
   // Chave no localStorage para acumulado do dia atual
   const SESSAO_KEY = () => `cora_sessao_${currentUser?.id}_${new Date().toISOString().split('T')[0]}`
@@ -4365,16 +4549,31 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       started_at:   new Date(sessaoInicio || Date.now() - durationSec * 1000).toISOString(),
       ended_at:     new Date().toISOString()
     }
-    // Tenta adicionar matéria ativa (se houver)
-    if (subjects && subjects.length > 0) {
-      // pega matéria selecionada no fichas-subject, se visível
+
+    // Usa matéria da tarefa ativa (M1.2) ou fallback para fichas-subject
+    if (sessaoTarefaAtiva?.subjectId) {
+      payload.subject_id   = sessaoTarefaAtiva.subjectId
+      payload.subject_name = sessaoTarefaAtiva.subjectName
+    } else {
       const subSel = document.getElementById('fichas-subject')
       if (subSel && subSel.value) {
         const sub = subjects.find(s => s.id === subSel.value)
         if (sub) { payload.subject_id = sub.id; payload.subject_name = sub.name }
       }
     }
+
     try { await dbInsert('study_sessions', payload) } catch (_) {}
+
+    // Acumula time_spent na daily_sessions (M1.2)
+    if (sessaoTarefaAtiva?.tarefaId && durationSec >= 5) {
+      try {
+        const [row] = await dbSelect('daily_sessions', `select=id,time_spent&id=eq.${sessaoTarefaAtiva.tarefaId}`)
+        if (row) {
+          const prev = row.time_spent || 0
+          await dbUpdate('daily_sessions', row.id, { time_spent: prev + durationSec })
+        }
+      } catch (_) {}
+    }
   }
 
   // Iniciar / Pausar sessão
@@ -4391,11 +4590,16 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
 
       if (btnIcon) btnIcon.textContent = '⏸'
       if (btnText) btnText.textContent = 'Pausar sessão'
-      if (lbl)     lbl.textContent     = 'Sessão em andamento...'
+      if (lbl)     lbl.textContent     = sessaoTarefaAtiva ? `📌 ${sessaoTarefaAtiva.subjectName}` : 'Sessão em andamento...'
       if (dot)     dot.style.background = '#fff'
 
       sessaoInterval = setInterval(sessaoTick, 1000)
       sessaoTick()
+
+      // Atualiza self-card de amigos (badge Ao Vivo)
+      if (document.getElementById('page-amigos')?.classList.contains('active')) amigosAtualizarSelfCard()
+      // Broadcast Realtime Presence
+      _presenceTrack()
 
     } else {
       // ── PAUSAR / ENCERRAR ────────────────────────────────
@@ -4422,6 +4626,17 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       if (dot)     dot.style.background = 'rgba(255,255,255,.4)'
 
       sessaoLoadStats()
+
+      // Atualiza self-card + para Presence
+      if (document.getElementById('page-amigos')?.classList.contains('active')) amigosAtualizarSelfCard()
+      _presenceUntrack()
+
+      // Re-renderiza tarefas para atualizar tempo acumulado
+      if (sessaoTarefaAtiva) {
+        const today = new Date().toISOString().split('T')[0]
+        dbSelect('daily_sessions', `select=*,subjects(name,color,id)&date=eq.${today}`)
+          .then(t => renderTarefas(Array.isArray(t) ? t : []))
+      }
     }
   }
 
@@ -4573,6 +4788,56 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     timerUpdateDisplay()
   }
 
+  // ── Atualiza card de autoperfil na aba Amigos ──────────────
+  async function amigosAtualizarSelfCard() {
+    const perfil     = JSON.parse(localStorage.getItem(`cora_perfil_${currentUser.id}`) || '{}')
+    const rawName    = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]
+    const nome       = myProfile?.display_name || perfil.nome || rawName
+    const username   = myProfile?.username ? '@' + myProfile.username : '—'
+    const avatarUrl  = myProfile?.avatar_url || perfil.avatar_url
+
+    // Avatar
+    const avatarEl = document.getElementById('amigos-self-avatar')
+    if (avatarEl) {
+      if (avatarUrl) {
+        avatarEl.innerHTML = `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+      } else {
+        avatarEl.innerHTML = perfil.emoji || nome[0]?.toUpperCase() || '?'
+        avatarEl.style.fontSize = '1.6rem'
+      }
+    }
+    const nameEl = document.getElementById('amigos-self-name')
+    const userEl = document.getElementById('amigos-self-username')
+    if (nameEl) nameEl.textContent = nome
+    if (userEl) userEl.textContent = username
+
+    // Status ao vivo (sessão ativa)
+    const statusEl = document.getElementById('amigos-self-status')
+    if (statusEl) {
+      if (sessaoAtiva) {
+        const subjectLabel = sessaoTarefaAtiva?.subjectName || 'Estudando'
+        statusEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:.3rem;
+          background:rgba(0,200,83,.18);color:#00c853;font-size:.72rem;font-weight:800;
+          padding:2px 8px;border-radius:20px;letter-spacing:.04em">
+          <span style="width:6px;height:6px;border-radius:50%;background:#00c853;animation:pulseGreen 1.2s infinite"></span>
+          AO VIVO · ${escHtml(subjectLabel)}</span>`
+      } else {
+        statusEl.innerHTML = ''
+      }
+    }
+
+    // Horas
+    const base      = parseInt(localStorage.getItem(SESSAO_KEY()) || '0')
+    const elapsed   = sessaoAtiva && sessaoInicio ? Math.floor((Date.now() - sessaoInicio)/1000) : 0
+    const hojeTotal = base + elapsed
+    const weekMin   = await calcWeeklyHours()
+
+    const hojeEl   = document.getElementById('amigos-self-hoje')
+    const semanaEl = document.getElementById('amigos-self-semana')
+    if (hojeEl)   hojeEl.textContent   = hojeTotal >= 60 ? sessaoFmtMin(Math.round(hojeTotal/60)) : (hojeTotal > 0 ? Math.round(hojeTotal/60)+'min' : '—')
+    if (semanaEl) semanaEl.textContent = weekMin > 0 ? sessaoFmtMin(weekMin) : '—'
+  }
+
   // ── Renderiza avatar de um amigo (foto ou inicial) ─────────
   function _amigoAvatarHtml(p) {
     if (p && p.avatar_url) {
@@ -4585,7 +4850,9 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
   // ── Carregar página de amigos ──────────────────────────────
   async function amigosLoad() {
     if (!myProfile) await checkProfile()
+    await loadPrivacyBlocks()   // M1.4: atualiza lista de bloqueios antes de renderizar
     _amigosUpdateMyDisplay()
+    amigosAtualizarSelfCard() // card de autoperfil no topo
 
     const friendships = await dbSelect('friendships', 'select=*&order=created_at.desc')
 
@@ -4632,18 +4899,40 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     if (accepted.length > 0) {
       emptyEl.style.display = 'none'
       listEl.innerHTML = accepted.map(f => {
-        const fid = f.requester_id === currentUser.id ? f.addressee_id : f.requester_id
-        const p   = friendProfiles[fid] || {}
+        const fid        = f.requester_id === currentUser.id ? f.addressee_id : f.requester_id
+        const p          = friendProfiles[fid] || {}
+        const presence   = friendPresenceMap[fid]
+        const isBlocked  = myPrivacyBlocks.has(fid)  // M1.4: estou ocultando meus dados deste amigo
+
         const horasBadge = (p.hours_public !== false && p.weekly_minutes > 0)
           ? `<span style="font-size:.72rem;color:var(--coral);font-weight:700;white-space:nowrap">📚 ${p.weekly_minutes >= 60 ? Math.floor(p.weekly_minutes/60)+'h'+(p.weekly_minutes%60>0?p.weekly_minutes%60+'min':'') : p.weekly_minutes+'min'}</span>`
           : ''
-        return `<div class="amigo-card">
+
+        const presenceBadge = `<span class="presence-badge" style="display:${presence ? 'inline-flex' : 'none'};align-items:center;gap:.28rem;
+          background:rgba(0,200,83,.15);color:#00c853;font-size:.68rem;font-weight:800;
+          padding:2px 7px;border-radius:20px;letter-spacing:.04em;margin-top:.2rem">
+          <span style="width:5px;height:5px;border-radius:50%;background:#00c853;animation:pulseGreen 1.2s infinite;flex-shrink:0"></span>
+          <span class="presence-label">${presence ? (presence.subject_name ? `AO VIVO · ${escHtml(presence.subject_name)}` : 'AO VIVO') : 'AO VIVO'}</span>
+        </span>`
+
+        // M1.4: botão de privacidade individual
+        const lockBtn = `<button onclick="amigosToggleBlock('${fid}', this)"
+          title="${isBlocked ? 'Seus dados estão ocultos para este amigo (clique para revelar)' : 'Ocultar meus dados para este amigo'}"
+          style="background:none;border:none;cursor:pointer;font-size:.95rem;padding:2px 4px;
+            opacity:${isBlocked ? '1' : '0.35'};transition:opacity .15s;line-height:1"
+          >${isBlocked ? '🔒' : '🔓'}</button>`
+
+        return `<div class="amigo-card" data-friend-id="${fid}">
           ${_amigoAvatarHtml(p)}
           <div class="amigo-info">
             <div class="amigo-name">${escHtml(p.display_name || p.username || '—')}</div>
             <div class="amigo-username">@${escHtml(p.username || '...')}${horasBadge ? '&ensp;'+horasBadge : ''}</div>
+            ${presenceBadge}
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="amigosRemover('${f.id}')" title="Remover">✕</button>
+          <div style="display:flex;align-items:center;gap:.15rem;flex-shrink:0">
+            ${lockBtn}
+            <button class="btn btn-ghost btn-sm" onclick="amigosRemover('${f.id}')" title="Remover">✕</button>
+          </div>
         </div>`
       }).join('')
     } else { emptyEl.style.display = 'block'; listEl.innerHTML = '' }
