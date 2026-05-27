@@ -2508,6 +2508,8 @@ body {
       const d = getSubjectData(s.id)
       return renderCalcSubject(s, d)
     }).join('')
+    // M6.1+M6.2: popular badges no header mesmo antes de expandir
+    subjects.forEach(s => refreshCalcHeader(s.id))
   }
 
   function renderCalcSubject(s, d) {
@@ -2531,7 +2533,7 @@ body {
   function toggleCalc(sid) {
     const body = document.getElementById(`calc-body-${sid}`)
     if (!body) return
-    if (body.style.display !== 'none') { body.style.display = 'none'; return }
+    if (body.style.display !== 'none') { body.style.display = 'none'; refreshCalcHeader(sid); return }
     body.style.display = 'block'
     body.innerHTML = renderCalcBody(sid)
     refreshCalcHeader(sid)
@@ -2882,7 +2884,10 @@ body {
       }
     }
 
-    extra.innerHTML = mediaBadge + faltaBadge
+    // M6.2: chip de meta sempre visível no header
+    const metaChip = `<span style="font-size:.68rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.1rem .45rem;flex-shrink:0;white-space:nowrap">🎯 ${target}</span>`
+
+    extra.innerHTML = metaChip + mediaBadge + faltaBadge
   }
 
   // ── TIMER / POMODORO ─────────────────────────────────────────
