@@ -3146,6 +3146,11 @@ body {
     const bubbleDisp = document.getElementById('timer-display')
     if (bubbleDisp) bubbleDisp.textContent = str
     const big = document.getElementById('timer-big'); if (big) big.textContent = str
+    // Título da aba: mostra countdown do Pomodoro quando ativo
+    if (timerRunning) {
+      const phase = pomodoroPhase === 'work' ? '🍅' : '☕'
+      document.title = `${phase} ${str} · Cora`
+    }
 
     const ring = document.getElementById('timer-ring')
     if (ring && timerMode === 'pomodoro') {
@@ -4881,6 +4886,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     if (!timerRunning) {
       const bubble = document.getElementById('timer-display')
       if (bubble) bubble.textContent = sessaoFmt(total)
+      // Título da aba: mostra tempo da sessão
+      document.title = `▶ ${sessaoFmt(total)} · Cora`
     }
     // Pulsar o dot de status
     const dot = document.getElementById('sessao-status-dot')
@@ -5005,6 +5012,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       if (el) el.textContent = sessaoFmt(total)
       // Para Pomodoro junto com a sessão (só se modo Pomodoro estiver ativo)
       if (_getCfg().pomodoroMode && timerRunning) { pauseTimer(); resetTimer() }
+      // Restaura título da aba
+      document.title = 'Cora'
       // Bolha flutuante: desativa coral, mostra total do dia, ícone de play
       const bubbleEl = document.getElementById('timer-display')
       if (bubbleEl) bubbleEl.textContent = sessaoFmt(total)
