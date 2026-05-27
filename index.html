@@ -1051,7 +1051,6 @@ body {
               onchange="localStorage.setItem('cora_fichas_subject', this.value)">
               <option value="">Matéria...</option>
             </select>
-            <button class="btn btn-ghost btn-sm" onclick="abrirPainelFormulas()" title="Glossário de fórmulas">📐 Fórmulas</button>
             <button class="btn btn-coral btn-sm" onclick="document.getElementById('fichas-file-input').click()">📄 Importar</button>
             <input type="file" id="fichas-file-input" accept=".pdf,image/png,image/jpeg,image/webp" style="display:none" onchange="fichaFileSelected(event)">
           </div>
@@ -1109,6 +1108,8 @@ body {
               <!-- Botões de salvar -->
               <button id="fichas-save-crop-btn" class="btn btn-coral" onclick="fichaSalvarErro(false)" style="display:none;width:100%">📕 Salvar recorte no Caderno</button>
               <button class="btn btn-ghost btn-sm" onclick="fichaSalvarErro(true)" style="width:100%;font-size:.8rem">Salvar página inteira no Caderno</button>
+              <!-- Fórmulas (M3.1) -->
+              <button class="btn btn-ghost btn-sm" onclick="abrirPainelFormulas()" style="width:100%;font-size:.8rem">📐 Consultar Fórmulas</button>
               <!-- Nome da ficha -->
               <div id="fichas-filename" style="font-size:.74rem;color:var(--muted);text-align:center;padding:.15rem 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
             </div>
