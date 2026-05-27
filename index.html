@@ -1373,8 +1373,8 @@ body {
       &nbsp;·&nbsp; Pausa <input id="pomo-break" class="timer-inp" type="number" value="5" min="1" max="30"> min
     </div>
   </div>
-  <div id="timer-bubble" onclick="toggleTimerPanel()" title="Cronômetro / Pomodoro">
-    ⏱ <span id="timer-display">25:00</span>
+  <div id="timer-bubble" onclick="toggleTimerPanel()" title="Sessão de estudos / Pomodoro">
+    ⏱ <span id="timer-display">00:00:00</span>
   </div>
 </div>
 
@@ -4685,6 +4685,9 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     const total   = base + elapsed
     const el = document.getElementById('sessao-timer-display')
     if (el) el.textContent = sessaoFmt(total)
+    // Sincronizar bolha flutuante com o relogio da sessao
+    const bubble = document.getElementById('timer-display')
+    if (bubble) bubble.textContent = sessaoFmt(total)
     // Pulsar o dot de status
     const dot = document.getElementById('sessao-status-dot')
     if (dot) dot.style.background = elapsed % 2 === 0 ? '#fff' : 'rgba(255,255,255,.4)'
@@ -4775,6 +4778,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
 
       sessaoInterval = setInterval(sessaoTick, 1000)
       sessaoTick()
+      // Bolha flutuante: ativa coral pulse
+      document.getElementById('timer-bubble')?.classList.add('running')
 
       // Atualiza self-card de amigos (badge Ao Vivo)
       if (document.getElementById('page-amigos')?.classList.contains('active')) amigosAtualizarSelfCard()
@@ -4799,6 +4804,10 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
 
       const el = document.getElementById('sessao-timer-display')
       if (el) el.textContent = sessaoFmt(total)
+      // Bolha flutuante: desativa coral, mostra total do dia
+      const bubbleEl = document.getElementById('timer-display')
+      if (bubbleEl) bubbleEl.textContent = sessaoFmt(total)
+      document.getElementById('timer-bubble')?.classList.remove('running')
 
       if (btnIcon) btnIcon.textContent = '▶'
       if (btnText) btnText.textContent = 'Iniciar sessão'
@@ -4825,10 +4834,16 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     const base = parseInt(localStorage.getItem(SESSAO_KEY()) || '0')
     const el   = document.getElementById('sessao-timer-display')
     const lbl  = document.getElementById('sessao-materia-label')
-
-    if (el) el.textContent = sessaoFmt(sessaoAtiva
+    const totalNow = sessaoAtiva
       ? base + Math.floor((Date.now() - sessaoInicio) / 1000)
-      : base)
+      : base
+
+    if (el) el.textContent = sessaoFmt(totalNow)
+
+    // Sincronizar bolha com o valor atual
+    const bubbleEl = document.getElementById('timer-display')
+    if (bubbleEl) bubbleEl.textContent = sessaoFmt(totalNow)
+    if (sessaoAtiva) document.getElementById('timer-bubble')?.classList.add('running')
 
     if (base > 0 && !sessaoAtiva && lbl)
       lbl.textContent = sessaoFmtMin(Math.round(base / 60)) + ' registrado hoje ✓'
