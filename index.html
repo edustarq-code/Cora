@@ -585,6 +585,27 @@ body {
       font-size:.79rem;font-weight:600;outline:none;min-width:18px;max-width:58px;
       text-align:center;cursor:text;padding:0}
 
+    /* ── SIDEBAR RETRÁTIL (M4.2) ────────────────────────── */
+    .sidebar{transition:width .22s ease;overflow:hidden}
+    .sidebar.collapsed{width:62px}
+    .sidebar.collapsed .logo-name,
+    .sidebar.collapsed .logo-badge,
+    .sidebar.collapsed .sidebar-section,
+    .sidebar.collapsed .user-info,
+    .sidebar.collapsed #sidebar-hours-widget{display:none!important}
+    .sidebar.collapsed .sidebar-logo{justify-content:space-between;padding:.85rem .7rem}
+    .sidebar.collapsed .nav-item{justify-content:center;font-size:0;padding:.55rem;width:44px;margin:0 auto}
+    .sidebar.collapsed .nav-item .nav-icon{font-size:.95rem;width:auto}
+    .sidebar.collapsed .user-card{justify-content:center;padding:.5rem}
+    .sidebar.collapsed .sidebar-bottom{padding:.7rem .4rem}
+    .main{transition:margin-left .22s ease}
+    .main.sidebar-collapsed{margin-left:62px}
+    .sidebar-toggle-btn{background:none;border:none;cursor:pointer;font-size:.85rem;color:var(--muted);
+      padding:3px 6px;border-radius:6px;transition:background .15s,color .15s;flex-shrink:0;line-height:1;
+      margin-left:auto;font-family:'Geist',sans-serif}
+    .sidebar-toggle-btn:hover{background:var(--surface2);color:var(--ink)}
+    .sidebar.collapsed .sidebar-toggle-btn{margin-left:0;font-size:1rem}
+
     /* ── TIMER FLUTUANTE ─────────────────── */
     #timer-float{position:fixed;bottom:1.5rem;right:1.5rem;z-index:150;display:flex;flex-direction:column;align-items:flex-end}
     #timer-bubble{background:var(--ink);color:#fff;border-radius:50px;padding:.45rem 1rem;
@@ -787,6 +808,7 @@ body {
       <div class="logo-mark">C</div>
       <div class="logo-name">Cora</div>
       <div class="logo-badge">Beta</div>
+      <button class="sidebar-toggle-btn" id="sidebar-toggle-btn" onclick="toggleSidebar()" title="Recolher menu">←</button>
     </div>
 
     <div class="sidebar-section">Estudos</div>
@@ -1238,38 +1260,7 @@ body {
 
   </main>
 
-  <!-- ── POMODORO FLUTUANTE ── -->
-  <div id="timer-float" style="display:none">
-    <div id="timer-panel" style="display:none">
-      <div style="font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem">⏱ Pomodoro</div>
-      <!-- Modos -->
-      <div style="display:flex;gap:.3rem;margin-bottom:.75rem">
-        <button class="timer-mode-btn active" id="tMode-foco"   onclick="timerSetMode('foco',this)">Foco 25</button>
-        <button class="timer-mode-btn"        id="tMode-pausa"  onclick="timerSetMode('pausa',this)">Pausa 5</button>
-        <button class="timer-mode-btn"        id="tMode-custom" onclick="timerSetMode('custom',this)">Custom</button>
-      </div>
-      <!-- Custom input -->
-      <div id="timer-custom-row" style="display:none;align-items:center;gap:.4rem;margin-bottom:.75rem">
-        <input class="timer-inp" id="timer-custom-min" type="number" min="1" max="120" value="25">
-        <span style="font-size:.78rem;color:var(--muted)">min</span>
-      </div>
-      <!-- Display -->
-      <div id="timer-display" style="font-size:2.4rem;font-weight:800;text-align:center;color:var(--ink);font-variant-numeric:tabular-nums;letter-spacing:-.02em;margin:.35rem 0">25:00</div>
-      <!-- Botões -->
-      <div style="display:flex;gap:.5rem;margin-top:.5rem">
-        <button onclick="timerToggle()" id="timer-toggle-btn"
-          style="flex:1;padding:.5rem;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.85rem;
-          background:var(--coral);color:#fff;font-family:'Geist',sans-serif">Iniciar</button>
-        <button onclick="timerReset()"
-          style="padding:.5rem .75rem;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer;
-          font-size:.82rem;color:var(--muted);font-family:'Geist',sans-serif">↺</button>
-      </div>
-    </div>
-    <!-- Bolha flutuante -->
-    <div id="timer-bubble" onclick="timerBubbleClick()">
-      ⏱ <span id="timer-bubble-txt">25:00</span>
-    </div>
-  </div>
+  <!-- timer-float legado removido (IDs duplicados) -->
 
   <!-- ── MODAL: escolher username ── -->
   <div id="username-modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(26,24,20,.6);z-index:400;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)">
@@ -1345,7 +1336,7 @@ body {
 </div>
 
 <!-- TIMER FLUTUANTE -->
-<div id="timer-float">
+<div id="timer-float" style="display:none">
   <div id="timer-panel" style="display:none">
     <div style="display:flex;gap:.3rem;margin-bottom:.8rem">
       <button class="timer-mode-btn active" id="tbtn-pomodoro" onclick="setTimerMode('pomodoro')">🍅 Pomodoro</button>
@@ -1467,10 +1458,12 @@ body {
     <!-- Stats de progresso -->
     <div id="profile-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin-bottom:1.1rem"></div>
 
-    <div style="display:flex;gap:.5rem">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="logOut()" style="color:#c00;border-color:#fcc">Sair</button>
+      <button class="btn btn-ghost btn-sm" onclick="trocarConta()" title="Entrar com outra conta Google">Trocar conta</button>
       <button class="btn btn-coral" style="flex:1" onclick="salvarPerfil()">Salvar →</button>
     </div>
+    <button onclick="apagarConta()" style="width:100%;margin-top:.45rem;background:none;border:none;cursor:pointer;font-size:.74rem;color:var(--muted);padding:.3rem;text-align:center;font-family:'Geist',sans-serif" onmouseover="this.style.color='#c00'" onmouseout="this.style.color='var(--muted)'">🗑 Apagar conta permanentemente</button>
   </div>
 </div>
 
@@ -1559,6 +1552,69 @@ body {
     })
   }
 
+  // ── Sidebar retrátil (M4.2) ──────────────────────────────────
+  function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar')
+    const main    = document.querySelector('.main')
+    const btn     = document.getElementById('sidebar-toggle-btn')
+    if (!sidebar) return
+    const collapsed = sidebar.classList.toggle('collapsed')
+    if (main) main.classList.toggle('sidebar-collapsed', collapsed)
+    if (btn)  btn.textContent = collapsed ? '→' : '←'
+    localStorage.setItem('cora_sidebar_collapsed', collapsed ? '1' : '0')
+  }
+
+  function initSidebarState() {
+    if (localStorage.getItem('cora_sidebar_collapsed') !== '1') return
+    const sidebar = document.querySelector('.sidebar')
+    const main    = document.querySelector('.main')
+    const btn     = document.getElementById('sidebar-toggle-btn')
+    if (sidebar) sidebar.classList.add('collapsed')
+    if (main)    main.classList.add('sidebar-collapsed')
+    if (btn)     btn.textContent = '→'
+  }
+
+  // ── Gerenciamento de conta ────────────────────────────────────
+  async function trocarConta() {
+    fecharPerfil()
+    await db.auth.signOut()
+    db.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: 'https://cora-lyart.vercel.app/',
+        queryParams: { prompt: 'select_account' }
+      }
+    })
+  }
+
+  async function apagarConta() {
+    const ok = confirm('⚠️ Tem certeza? Todos os seus dados serão apagados permanentemente. Esta ação não pode ser desfeita.')
+    if (!ok) return
+    fecharPerfil()
+    const uid     = currentUser.id
+    const headers = {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + currentSession.access_token
+    }
+    notify('Apagando dados...')
+    // Apaga todos os dados do usuário nas tabelas (RLS garante que só pode apagar os próprios)
+    await Promise.allSettled([
+      fetch(`${API}/caderno_erros?user_id=eq.${uid}`,  { method: 'DELETE', headers }),
+      fetch(`${API}/daily_sessions?user_id=eq.${uid}`, { method: 'DELETE', headers }),
+      fetch(`${API}/study_sessions?user_id=eq.${uid}`, { method: 'DELETE', headers }),
+      fetch(`${API}/friendships?user_id=eq.${uid}`,    { method: 'DELETE', headers }),
+      fetch(`${API}/friendships?friend_id=eq.${uid}`,  { method: 'DELETE', headers }),
+      fetch(`${API}/privacy_blocks?user_id=eq.${uid}`, { method: 'DELETE', headers }),
+      fetch(`${API}/glossario?user_id=eq.${uid}`,      { method: 'DELETE', headers }),
+      fetch(`${API}/grades?user_id=eq.${uid}`,         { method: 'DELETE', headers }),
+      fetch(`${API}/subjects?user_id=eq.${uid}`,       { method: 'DELETE', headers }),
+      fetch(`${API}/profiles?id=eq.${uid}`,            { method: 'DELETE', headers }),
+    ])
+    // Limpa localStorage
+    Object.keys(localStorage).filter(k => k.includes(uid)).forEach(k => localStorage.removeItem(k))
+    await db.auth.signOut()
+  }
+
   function logOut() {
     db.auth.signOut().then(() => {
       // Limpa tokens e dados de sessão do Supabase no localStorage
@@ -1627,6 +1683,7 @@ body {
     calcWeeklyHours()     // exibe horas semanais na sidebar
     sessaoInit()          // inicializa cronômetro de sessão
     timerShow()           // mostra Pomodoro flutuante
+    initSidebarState()    // restaura estado da sidebar (retrátil M4.2)
     await loadPrivacyBlocks()  // carrega lista de bloqueios de privacidade (M1.4)
     _presenceInit()            // conecta canal Realtime Presence (M1.3)
   }
@@ -2963,7 +3020,9 @@ body {
     const m = Math.floor(secs / 60).toString().padStart(2, '0')
     const s = (secs % 60).toString().padStart(2, '0')
     const str = `${m}:${s}`
-    document.getElementById('timer-display').textContent = str
+    // Atualiza a bolha com o countdown do Pomodoro
+    const bubbleDisp = document.getElementById('timer-display')
+    if (bubbleDisp) bubbleDisp.textContent = str
     const big = document.getElementById('timer-big'); if (big) big.textContent = str
 
     const ring = document.getElementById('timer-ring')
@@ -4696,9 +4755,11 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     const total   = base + elapsed
     const el = document.getElementById('sessao-timer-display')
     if (el) el.textContent = sessaoFmt(total)
-    // Sincronizar bolha flutuante com o relogio da sessao
-    const bubble = document.getElementById('timer-display')
-    if (bubble) bubble.textContent = sessaoFmt(total)
+    // Bolha: só atualiza com tempo da sessão se o Pomodoro não estiver rodando
+    if (!timerRunning) {
+      const bubble = document.getElementById('timer-display')
+      if (bubble) bubble.textContent = sessaoFmt(total)
+    }
     // Pulsar o dot de status
     const dot = document.getElementById('sessao-status-dot')
     if (dot) dot.style.background = elapsed % 2 === 0 ? '#fff' : 'rgba(255,255,255,.4)'
@@ -4794,6 +4855,9 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       const ico = document.getElementById('timer-bubble-icon')
       if (ico) ico.textContent = '⏸'
 
+      // Parear com Pomodoro: inicia automaticamente se não estiver rodando
+      if (!timerRunning) startTimer()
+
       // Atualiza self-card de amigos (badge Ao Vivo)
       if (document.getElementById('page-amigos')?.classList.contains('active')) amigosAtualizarSelfCard()
       // Broadcast Realtime Presence
@@ -4817,6 +4881,9 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
 
       const el = document.getElementById('sessao-timer-display')
       if (el) el.textContent = sessaoFmt(total)
+      // Parar Pomodoro junto com a sessão
+      if (timerRunning) pauseTimer()
+      resetTimer()
       // Bolha flutuante: desativa coral, mostra total do dia, ícone de play
       const bubbleEl = document.getElementById('timer-display')
       if (bubbleEl) bubbleEl.textContent = sessaoFmt(total)
@@ -5001,7 +5068,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
   function timerShow() {
     const f = document.getElementById('timer-float')
     if (f) f.style.display = 'flex'
-    timerUpdateDisplay()
+    // Não chama timerUpdateDisplay aqui para não sobrescrever o tempo de sessão na bolha
+    // updateTimerDisplay() será chamado quando Pomodoro iniciar
   }
 
   // ── Atualiza card de autoperfil na aba Amigos ──────────────
