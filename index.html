@@ -1025,7 +1025,7 @@ body {
               Recebeu um código de um colega? Cole aqui para ativar premium e importar as matérias dele.
             </p>
             <div class="add-row">
-              <input class="inp" id="inp-resgatar" placeholder="Ex: LC3042"
+              <input class="inp" id="inp-resgatar" placeholder="LC2026"
                      style="font-family:monospace;font-weight:700;letter-spacing:.08em;text-transform:uppercase"
                      onkeydown="if(event.key==='Enter') resgatarCodigo()">
               <button class="btn btn-coral" onclick="resgatarCodigo()">Ativar →</button>
@@ -1298,7 +1298,7 @@ body {
       <!-- Código escolar -->
       <div style="font-size:.75rem;font-weight:700;color:var(--ink2);margin:.75rem 0 .3rem">🏫 Código da escola <span style="font-weight:400;color:var(--muted)">(opcional)</span></div>
       <div style="display:flex;align-items:center;gap:.5rem">
-        <input id="school-code-input" class="calc-inp-name" placeholder="Ex: LC2026"
+        <input id="school-code-input" class="calc-inp-name" placeholder="LC2026"
           style="flex:1;text-transform:uppercase;letter-spacing:.06em"
           oninput="this.value=this.value.toUpperCase()"
           onkeydown="if(event.key==='Enter') usernameConfirm()">
@@ -5358,9 +5358,12 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     const resultEl = document.getElementById('amigos-search-result')
     if (!q) { resultEl.innerHTML = ''; return }
 
-    const res = await dbSelect('profiles', `select=*&username=ilike.${q}&id=neq.${currentUser.id}`)
+    resultEl.innerHTML = `<div style="font-size:.84rem;color:var(--muted);padding:.4rem 0">Buscando...</div>`
+    const qEnc = encodeURIComponent(`%${q}%`)
+    const res = await dbSelect('profiles',
+      `select=*&or=(username.ilike.${qEnc},display_name.ilike.${qEnc})&id=neq.${currentUser.id}&limit=8`)
     if (!res || !res.length) {
-      resultEl.innerHTML = `<div style="font-size:.84rem;color:var(--muted);padding:.4rem 0">Nenhum usuário encontrado com @${escHtml(q)}</div>`
+      resultEl.innerHTML = `<div style="font-size:.84rem;color:var(--muted);padding:.4rem 0">Nenhum usuário encontrado para "${escHtml(q)}"</div>`
       return
     }
 
