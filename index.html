@@ -664,6 +664,10 @@ body {
       display:flex;align-items:flex-start;justify-content:center;min-height:300px;cursor:crosshair;
       user-select:none;-webkit-user-select:none}
     #fichas-canvas{max-width:100%;display:block}
+    #fichas-hl-canvas,#fichas-hl-live{max-width:100%;display:block}
+    .fichas-hl-swatch{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0;transition:transform .12s,border-color .12s}
+    .fichas-hl-swatch:hover{transform:scale(1.18)}
+    .fichas-hl-swatch.active{border-color:var(--ink)!important;transform:scale(1.18)}
     .fichas-nav{display:flex;align-items:center;justify-content:center;gap:.7rem;padding:.4rem 0}
     .fichas-timer-display{font-size:1.9rem;font-weight:700;color:var(--coral);
       font-family:'Geist',monospace;letter-spacing:.04em;text-align:center}
@@ -1102,11 +1106,27 @@ body {
           <div class="fichas-layout">
             <!-- Visualizador -->
             <div>
+              <!-- Toolbar de modo: Recortar / Marca-texto -->
+              <div id="fichas-mode-bar" style="display:flex;align-items:center;gap:.4rem;margin-bottom:.5rem;flex-wrap:wrap">
+                <button id="fichas-mode-crop-btn" class="btn btn-coral btn-sm" onclick="fichaSetMode('crop')" title="Arrastar para recortar questão">✂ Recortar</button>
+                <button id="fichas-mode-hl-btn" class="btn btn-ghost btn-sm" onclick="fichaSetMode('highlight')" title="Arrastar para destacar">🖊 Marca-texto</button>
+                <div id="fichas-hl-colors" style="display:none;align-items:center;gap:.3rem">
+                  <button class="fichas-hl-swatch" style="background:#FFE066" onclick="fichaHlColor('#FFE066')" title="Amarelo"></button>
+                  <button class="fichas-hl-swatch" style="background:#A7F3A0" onclick="fichaHlColor('#A7F3A0')" title="Verde"></button>
+                  <button class="fichas-hl-swatch" style="background:#FCA5C8" onclick="fichaHlColor('#FCA5C8')" title="Rosa"></button>
+                  <button class="fichas-hl-swatch" style="background:#93C5FD" onclick="fichaHlColor('#93C5FD')" title="Azul"></button>
+                </div>
+                <button id="fichas-hl-clear-btn" class="btn btn-ghost btn-sm" style="display:none;font-size:.75rem" onclick="fichaHlClearPage()">🗑 Limpar destaques</button>
+              </div>
               <div class="fichas-canvas-wrap" id="fichas-canvas-wrap">
                 <canvas id="fichas-canvas"
                   onmousedown="fichaMouseDown(event)"
                   onmousemove="fichaMouseMove(event)"
                   onmouseup="fichaMouseUp(event)"></canvas>
+                <!-- Canvas de destaques (overlay, não captura eventos) -->
+                <canvas id="fichas-hl-canvas" style="position:absolute;top:0;left:0;pointer-events:none;opacity:.55"></canvas>
+                <!-- Canvas temporário do drag de destaque -->
+                <canvas id="fichas-hl-live" style="position:absolute;top:0;left:0;pointer-events:none;opacity:.55"></canvas>
                 <div id="fichas-overlay" style="display:none;position:absolute;border:2.5px dashed var(--coral);background:rgba(232,66,10,.1);pointer-events:none;border-radius:3px"></div>
               </div>
               <div id="fichas-nav" class="fichas-nav" style="display:none">
@@ -3831,6 +3851,60 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     let cropEnd    = null
     let cropRect   = null
 
+    // ── Marca-texto ───────────────────────────────────────────
+    let fichaMode      = 'crop'          // 'crop' | 'highlight'
+    let hlColor        = '#FFE066'       // cor ativa
+    let hlHighlights   = {}              // { pageNum: [{x,y,w,h,color}, ...] }
+    let hlSelecting    = false
+    let hlStart        = null
+
+    window.fichaSetMode = function(mode) {
+      fichaMode = mode
+      const cropBtn = document.getElementById('fichas-mode-crop-btn')
+      const hlBtn   = document.getElementById('fichas-mode-hl-btn')
+      const hlCols  = document.getElementById('fichas-hl-colors')
+      const hlClr   = document.getElementById('fichas-hl-clear-btn')
+      const wrap    = document.getElementById('fichas-canvas-wrap')
+      if (cropBtn) cropBtn.className = mode === 'crop'      ? 'btn btn-coral btn-sm' : 'btn btn-ghost btn-sm'
+      if (hlBtn)   hlBtn.className   = mode === 'highlight' ? 'btn btn-coral btn-sm' : 'btn btn-ghost btn-sm'
+      if (hlCols)  hlCols.style.display = mode === 'highlight' ? 'flex' : 'none'
+      if (hlClr)   hlClr.style.display  = mode === 'highlight' ? '' : 'none'
+      if (wrap)    wrap.style.cursor     = mode === 'highlight' ? 'cell' : 'crosshair'
+    }
+
+    window.fichaHlColor = function(color) {
+      hlColor = color
+      document.querySelectorAll('.fichas-hl-swatch').forEach(s => {
+        s.classList.toggle('active', s.style.background === color)
+      })
+    }
+
+    function hlCanvasSync(canvas) {
+      // Redimensiona os canvas de overlay para coincidir com o canvas principal
+      const hl   = document.getElementById('fichas-hl-canvas')
+      const live = document.getElementById('fichas-hl-live')
+      if (hl)   { hl.width   = canvas.width;   hl.height   = canvas.height }
+      if (live) { live.width = canvas.width;   live.height = canvas.height }
+    }
+
+    function hlRedraw() {
+      const hl  = document.getElementById('fichas-hl-canvas')
+      if (!hl) return
+      const ctx = hl.getContext('2d')
+      ctx.clearRect(0, 0, hl.width, hl.height)
+      const list = hlHighlights[currentPage] || []
+      list.forEach(r => {
+        ctx.fillStyle = r.color
+        ctx.fillRect(r.x, r.y, r.w, r.h)
+      })
+    }
+
+    window.fichaHlClearPage = function() {
+      hlHighlights[currentPage] = []
+      hlRedraw()
+      notify('Destaques da página removidos')
+    }
+
     // ── PDF.js ────────────────────────────────────────────────
     function initPdfJs() {
       if (window.pdfjsLib)
@@ -4178,6 +4252,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       canvas.width  = Math.round(img.width  * scale)
       canvas.height = Math.round(img.height * scale)
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      hlCanvasSync(canvas)
+      hlRedraw()
       updatePageLabel()
     }
 
@@ -4193,6 +4269,8 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       await page.render({canvasContext: canvas.getContext('2d'), viewport: vp}).promise
       currentPage = num
       clearCrop()
+      hlCanvasSync(canvas)
+      hlRedraw()
       updatePageLabel()
       if (currentFichaId) idbUpdateMeta(currentFichaId, {lastPage: currentPage})
     }
@@ -4265,6 +4343,19 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
       const wrapR  = document.getElementById('fichas-canvas-wrap').getBoundingClientRect()
       const scaleX = canvas.width  / canvR.width
       const scaleY = canvas.height / canvR.height
+
+      if (fichaMode === 'highlight') {
+        hlSelecting = true
+        hlStart = {
+          cx: (e.clientX - canvR.left) * scaleX,
+          cy: (e.clientY - canvR.top)  * scaleY
+        }
+        // Limpa canvas live
+        const live = document.getElementById('fichas-hl-live')
+        if (live) live.getContext('2d').clearRect(0, 0, live.width, live.height)
+        return
+      }
+
       cropStart = {
         cx: (e.clientX - canvR.left) * scaleX,
         cy: (e.clientY - canvR.top)  * scaleY,
@@ -4277,12 +4368,28 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     }
 
     window.fichaMouseMove = function(e) {
-      if (!selecting) return
       const canvas = document.getElementById('fichas-canvas')
       const canvR  = canvas.getBoundingClientRect()
       const wrapR  = document.getElementById('fichas-canvas-wrap').getBoundingClientRect()
       const scaleX = canvas.width  / canvR.width
       const scaleY = canvas.height / canvR.height
+
+      if (fichaMode === 'highlight' && hlSelecting && hlStart) {
+        const cx = (e.clientX - canvR.left) * scaleX
+        const cy = (e.clientY - canvR.top)  * scaleY
+        const live = document.getElementById('fichas-hl-live')
+        if (!live) return
+        const ctx = live.getContext('2d')
+        ctx.clearRect(0, 0, live.width, live.height)
+        ctx.fillStyle = hlColor
+        ctx.fillRect(
+          Math.min(hlStart.cx, cx), Math.min(hlStart.cy, cy),
+          Math.abs(cx - hlStart.cx), Math.abs(cy - hlStart.cy)
+        )
+        return
+      }
+
+      if (!selecting) return
       cropEnd = {
         cx: (e.clientX - canvR.left) * scaleX,
         cy: (e.clientY - canvR.top)  * scaleY,
@@ -4298,6 +4405,32 @@ ${materias.length ? `<h2>📝 Anotações por Matéria</h2>${notasSec}` : ''}
     }
 
     window.fichaMouseUp = function(e) {
+      const canvas = document.getElementById('fichas-canvas')
+      const canvR  = canvas.getBoundingClientRect()
+      const scaleX = canvas.width  / canvR.width
+      const scaleY = canvas.height / canvR.height
+
+      if (fichaMode === 'highlight' && hlSelecting && hlStart) {
+        hlSelecting = false
+        const cx = (e.clientX - canvR.left) * scaleX
+        const cy = (e.clientY - canvR.top)  * scaleY
+        const w  = Math.abs(cx - hlStart.cx)
+        const h  = Math.abs(cy - hlStart.cy)
+        if (w > 8 && h > 4) {
+          if (!hlHighlights[currentPage]) hlHighlights[currentPage] = []
+          hlHighlights[currentPage].push({
+            x: Math.min(hlStart.cx, cx), y: Math.min(hlStart.cy, cy),
+            w, h, color: hlColor
+          })
+          hlRedraw()
+        }
+        // Limpa canvas live
+        const live = document.getElementById('fichas-hl-live')
+        if (live) live.getContext('2d').clearRect(0, 0, live.width, live.height)
+        hlStart = null
+        return
+      }
+
       if (!selecting) return
       selecting = false
       if (!cropEnd) return
